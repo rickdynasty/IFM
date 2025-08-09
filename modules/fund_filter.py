@@ -84,14 +84,14 @@ def fund_filter(min_annual_return=5, min_consecutive_return=5, min_years_listed=
     for period in time_periods:
         df_all[f'{period}_数值'] = df_all[period].map(pct2float)
     
-    # 计算每一年的年化收益率
+    # 计算每一年的年收益率
     def calculate_annual_returns(row):
-        """计算每一年的单独年化收益率
+        """计算每一年的单独年收益率
         
         第1年：直接使用近1年数据
-        第2年：(近2年 - 近1年) 的年化收益
-        第3年：(近3年 - 近2年) 的年化收益
-        不满1年的按最新最大的月份数据进行折算
+        第2年：近2年总收益 - 近1年总收益
+        第3年：近3年总收益 - 近2年总收益
+        不满1年的按最高的月份收益来计算年收益
         """
         # 计算第1年收益率
         year1 = None
@@ -104,27 +104,19 @@ def fund_filter(min_annual_return=5, min_consecutive_return=5, min_years_listed=
         elif row.get('近1月_数值') is not None and not pd.isna(row.get('近1月_数值')):
             year1 = row.get('近1月_数值') * 12  # 1个月数据年化
         
-        # 计算第2年收益率
+        # 计算第2年收益率 - 直接相减法
         year2 = None
         if (row.get('近2年_数值') is not None and not pd.isna(row.get('近2年_数值')) and
             row.get('近1年_数值') is not None and not pd.isna(row.get('近1年_数值'))):
-            # 近2年总收益转换为单期收益
-            total_2y = (1 + row.get('近2年_数值')/100)
-            total_1y = (1 + row.get('近1年_数值')/100)
-            # 第2年的单期收益
-            if total_1y != 0:  # 避免除以零错误
-                year2 = (total_2y / total_1y - 1) * 100
+            # 第2年收益 = 近2年总收益 - 近1年总收益
+            year2 = row.get('近2年_数值') - row.get('近1年_数值')
             
-        # 计算第3年收益率
+        # 计算第3年收益率 - 直接相减法
         year3 = None
         if (row.get('近3年_数值') is not None and not pd.isna(row.get('近3年_数值')) and
             row.get('近2年_数值') is not None and not pd.isna(row.get('近2年_数值'))):
-            # 近3年总收益转换为单期收益
-            total_3y = (1 + row.get('近3年_数值')/100)
-            total_2y = (1 + row.get('近2年_数值')/100)
-            # 第3年的单期收益
-            if total_2y != 0:  # 避免除以零错误
-                year3 = (total_3y / total_2y - 1) * 100
+            # 第3年收益 = 近3年总收益 - 近2年总收益
+            year3 = row.get('近3年_数值') - row.get('近2年_数值')
         
         # 返回三年的单独收益率
         return {
