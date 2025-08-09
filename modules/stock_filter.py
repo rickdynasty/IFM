@@ -325,9 +325,9 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
         # 添加筛选标记
         for stock_type in selected_types:
             if stock_type in stock_sets and stock_code in stock_sets[stock_type]:
-                row[f'{stock_type}_标记'] = '✓'
+                row[f'{stock_type}'] = '✓'
             else:
-                row[f'{stock_type}_标记'] = '✗'
+                row[f'{stock_type}'] = '✗'
         
         # 行业筛选
         if industry_filter and row['所属行业'] and row['所属行业'] not in industry_filter:
@@ -338,7 +338,7 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
     result_df = pd.DataFrame(result_data)
     
     # 设置列顺序
-    cols = ['股票代码', '股票名称', '所属行业'] + [f'{t}_标记' for t in selected_types]
+    cols = ['股票代码', '股票名称', '所属行业'] + [f'{t}' for t in selected_types]
     result_df = result_df[cols]
     
     return result_df

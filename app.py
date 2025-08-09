@@ -302,77 +302,9 @@ elif st.session_state.current_page == "📈 基金筛选":
     st.markdown("<h2 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📈 基金筛选系统</h2>", unsafe_allow_html=True)
     
     # 重新排列页面组件
-    # 1. 筛选结果标题和下载按钮在同一行
-    result_col1, result_col2 = st.columns([3, 1])
-    
-    with result_col1:
-        st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>", unsafe_allow_html=True)
-    
-    # 导出功能
-    with result_col2:
-        if len(result) > 0:
-            csv = result.to_csv(index=False, encoding='utf-8-sig')
-            st.download_button(
-                label="📥 下载筛选结果 (CSV)",
-                data=csv,
-                file_name=f"基金筛选结果_{fund_type}_{selected_date}_{min_annual_return}%_{min_years_listed}年_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
     if len(result) > 0:
-        # 定义颜色函数
-        def color_returns(val):
-            try:
-                if pd.isna(val) or val == "---":
-                    return "color: black"
-                # 提取数值
-                num_val = float(str(val).replace('%', ''))
-                if num_val > 0:
-                    return "color: red; font-weight: bold"
-                elif num_val < 0:
-                    return "color: green; font-weight: bold"
-                else:
-                    return "color: black"
-            except:
-                return "color: black"
-        
-        # 应用样式，包括各年收益率
-        styled_df = result.style.map(color_returns, subset=['年化收益率', '第1年收益率', '第2年收益率', '第3年收益率', 
-                                                      '近1年', '近2年', '近3年', '今年来', '成立来'])
-        
-        # 构建列配置 - 添加各年收益率列
-        column_config = {
-            "基金代码": st.column_config.TextColumn("基金代码", width=80),
-            "基金简称": st.column_config.TextColumn("基金简称", width=150),
-            "基金类型": st.column_config.TextColumn("基金类型", width=80),  # 改为TextColumn，不再隐藏类型
-            "年化收益率": st.column_config.TextColumn("年化收益率", width=100),
-            "上市年限": st.column_config.TextColumn("上市年限", width=80),
-            "第1年收益率": st.column_config.TextColumn("第1年收益", width=90),
-            "第2年收益率": st.column_config.TextColumn("第2年收益", width=90),
-            "第3年收益率": st.column_config.TextColumn("第3年收益", width=90),
-            "近1年": st.column_config.TextColumn("近1年", width=80),
-            "近2年": st.column_config.TextColumn("近2年", width=80),
-            "近3年": st.column_config.TextColumn("近3年", width=80),
-            "今年来": st.column_config.TextColumn("今年来", width=80),
-            "成立来": st.column_config.TextColumn("成立来", width=80)
-        }
-        
-        # 添加额外列配置
-        if '基金经理' in result.columns:
-            column_config["基金经理"] = st.column_config.TextColumn("基金经理", width=120)
-        if '基金公司' in result.columns:
-            column_config["基金公司"] = st.column_config.TextColumn("基金公司", width=150)
-        
-        # 增加表格高度，充分利用节省出来的页面空间
-        st.dataframe(
-            styled_df,
-            use_container_width=True,
-            height=650,  # 增加表格高度
-            column_config=column_config
-        )
-        
-        # 移动到底部的统计信息 - 使用更紧凑的样式
-        st.markdown("<h3 style='margin-top:-0.5rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
+        # 先显示筛选结果统计
+        st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -398,6 +330,93 @@ elif st.session_state.current_page == "📈 基金筛选":
                 st.metric("最低年化收益率", f"{min_return:.2f}%")
             except:
                 st.metric("最低年化收益率", "---")
+        
+        # 然后显示筛选结果标题和下载按钮
+        result_col1, result_col2 = st.columns([3, 1])
+        
+        with result_col1:
+            st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>", unsafe_allow_html=True)
+        
+        # 导出功能
+        with result_col2:
+            csv = result.to_csv(index=False, encoding='utf-8-sig')
+            st.download_button(
+                label="📥 下载筛选结果 (CSV)",
+                data=csv,
+                file_name=f"基金筛选结果_{fund_type}_{selected_date}_{min_annual_return}%_{min_years_listed}年_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        # 定义颜色函数
+        def color_returns(val):
+            try:
+                if pd.isna(val) or val == "---":
+                    return "color: black"
+                # 提取数值
+                num_val = float(str(val).replace('%', ''))
+                if num_val > 0:
+                    return "color: red; font-weight: bold"
+                elif num_val < 0:
+                    return "color: green; font-weight: bold"
+                else:
+                    return "color: black"
+            except:
+                return "color: black"
+        
+        # 添加基金代码和基金简称的链接生成函数
+        def make_clickable_fund(val, is_code=False):
+            """将基金代码或基金简称转换为可点击的链接"""
+            if is_code:
+                # 基金代码补零至6位
+                code = str(val).zfill(6)
+                return f'<a href="https://fund.10jqka.com.cn/{code}" target="_blank">{val}</a>'
+            else:
+                # 基金简称直接链接
+                # 需要找到对应行的基金代码
+                code = str(result.loc[result['基金简称'] == val, '基金代码'].values[0]).zfill(6)
+                return f'<a href="https://fund.10jqka.com.cn/{code}" target="_blank">{val}</a>'
+        
+        # 不需要添加序号列，只需在HTML表格中修改表头
+        
+        # 应用样式，包括各年收益率
+        styled_df = result.style.map(color_returns, subset=['年化收益率', '第1年收益率', '第2年收益率', '第3年收益率', 
+                                                      '近1年', '近2年', '近3年', '今年来', '成立来'])
+        
+        # 为基金代码和基金简称添加可点击链接
+        styled_df = styled_df.format({'基金代码': lambda x: make_clickable_fund(x, True),
+                                     '基金简称': lambda x: make_clickable_fund(x, False)})
+        
+        # 构建列配置 - 添加各年收益率列
+        column_config = {
+            "基金代码": st.column_config.TextColumn("基金代码", width=80),
+            "基金简称": st.column_config.TextColumn("基金简称", width=150),
+            "基金类型": st.column_config.TextColumn("基金类型", width=80),  # 改为TextColumn，不再隐藏类型
+            "年化收益率": st.column_config.TextColumn("年化收益率", width=100),
+            "上市年限": st.column_config.TextColumn("上市年限", width=80),
+            "第1年收益率": st.column_config.TextColumn("第1年收益", width=90),
+            "第2年收益率": st.column_config.TextColumn("第2年收益", width=90),
+            "第3年收益率": st.column_config.TextColumn("第3年收益", width=90),
+            "近1年": st.column_config.TextColumn("近1年", width=80),
+            "近2年": st.column_config.TextColumn("近2年", width=80),
+            "近3年": st.column_config.TextColumn("近3年", width=80),
+            "今年来": st.column_config.TextColumn("今年来", width=80),
+            "成立来": st.column_config.TextColumn("成立来", width=80)
+        }
+        
+        # 添加额外列配置
+        if '基金经理' in result.columns:
+            column_config["基金经理"] = st.column_config.TextColumn("基金经理", width=120)
+        if '基金公司' in result.columns:
+            column_config["基金公司"] = st.column_config.TextColumn("基金公司", width=150)
+        
+        # 增加表格高度，充分利用节省出来的页面空间
+        # Streamlit的dataframe不支持unsafe_allow_html参数，需要使用st.write来显示HTML链接
+        st.write(
+            styled_df.to_html(escape=False),
+            unsafe_allow_html=True
+        )
+        
+        # 已在上方显示统计信息，这里不再需要
     else:
         st.warning("⚠️ 没有找到符合条件的基金，请调整筛选条件。")
 
@@ -425,11 +444,11 @@ elif st.session_state.current_page == "📊 股票筛选":
     # 获取所有股票类型选项
     all_stock_types = get_stock_type_options()
     
-    # 多类型选择
+    # 多类型选择 - 默认选择"ROE连续超15%"
     selected_types = st.sidebar.multiselect(
         "选择股票类型（可多选）",
         all_stock_types,
-        default=[],
+        default=["ROE连续超15%"],
         help="选择多个类型，系统将找出同时满足所有条件的股票"
     )
     
@@ -440,9 +459,15 @@ elif st.session_state.current_page == "📊 股票筛选":
         for stock_type in selected_types:
             sub_options = get_sub_type_options(stock_type)
             if sub_options:
+                # 为"ROE连续超15%"设置默认子类型为"连续3年"
+                default_index = 0
+                if stock_type == "ROE连续超15%" and "连续3年" in sub_options:
+                    default_index = sub_options.index("连续3年")
+                
                 sub_type = st.sidebar.selectbox(
                     f"{stock_type}子类型",
                     sub_options,
+                    index=default_index,
                     key=f"sub_{stock_type}"
                 )
                 sub_types[stock_type] = sub_type
@@ -468,46 +493,9 @@ elif st.session_state.current_page == "📊 股票筛选":
     # 主内容区域 - 使用更紧凑的标题样式
     st.markdown("<h2 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 股票筛选系统</h2>", unsafe_allow_html=True)
     
-    # 1. 筛选结果标题和下载按钮在同一行
-    result_col1, result_col2 = st.columns([3, 1])
-    
-    with result_col1:
-        st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>", unsafe_allow_html=True)
-    
-    # 导出功能
-    with result_col2:
-        if len(result) > 0:
-            csv = result.to_csv(index=False, encoding='utf-8-sig')
-            
-            # 生成文件名
-            file_name = f"股票筛选结果_{len(selected_types)}种类型"
-            if industry_filter:
-                file_name += f"_{len(industry_filter)}个行业"
-            file_name += f"_{selected_date}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
-            
-            st.download_button(
-                label="📥 下载筛选结果 (CSV)",
-                data=csv,
-                file_name=file_name,
-                mime="text/csv",
-                use_container_width=True
-            )
     if len(result) > 0:
-        # 显示表格数据 - 增加高度
-        st.dataframe(
-            result,
-            use_container_width=True,
-            height=650,  # 增加表格高度，与基金筛选保持一致
-            column_config={
-                "股票代码": st.column_config.TextColumn("股票代码", width=100),
-                "股票名称": st.column_config.TextColumn("股票名称", width=120),
-                "所属行业": st.column_config.TextColumn("所属行业", width=100),
-                **{f"{t}_标记": st.column_config.TextColumn(f"{t}", width=100) for t in selected_types}
-            }
-        )
-        
-        # 移到底部的统计信息 - 使用更紧凑的样式
-        st.markdown("<h3 style='margin-top:-0.5rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
+        # 先显示筛选结果统计
+        st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -524,6 +512,61 @@ elif st.session_state.current_page == "📊 股票筛选":
         
         with col4:
             st.metric("数据日期", selected_date)
+        
+        # 然后显示筛选结果标题和下载按钮
+        result_col1, result_col2 = st.columns([3, 1])
+        
+        with result_col1:
+            st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>", unsafe_allow_html=True)
+        
+        # 导出功能
+        with result_col2:
+            csv = result.to_csv(index=False, encoding='utf-8-sig')
+            
+            # 生成文件名
+            file_name = f"股票筛选结果_{len(selected_types)}种类型"
+            if industry_filter:
+                file_name += f"_{len(industry_filter)}个行业"
+            file_name += f"_{selected_date}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+            
+            st.download_button(
+                label="📥 下载筛选结果 (CSV)",
+                data=csv,
+                file_name=file_name,
+                mime="text/csv",
+                use_container_width=True
+            )
+        # 添加股票代码和股票名称的链接生成函数
+        def make_clickable_stock(val, is_code=False):
+            """将股票代码或股票名称转换为可点击的链接"""
+            if is_code:
+                # 股票代码补零至6位
+                code = str(val).zfill(6)
+                return f'<a href="https://stockpage.10jqka.com.cn/{code}" target="_blank">{val}</a>'
+            else:
+                # 股票名称直接链接
+                # 需要找到对应行的股票代码
+                try:
+                    code = str(result.loc[result['股票名称'] == val, '股票代码'].values[0]).zfill(6)
+                    return f'<a href="https://stockpage.10jqka.com.cn/{code}" target="_blank">{val}</a>'
+                except:
+                    return val  # 如果找不到对应的股票代码，则返回原值
+        
+        # 不需要添加序号列，只需在HTML表格中修改表头
+        
+        # 为股票代码和股票名称添加可点击链接
+        styled_df = result.style.format({
+            '股票代码': lambda x: make_clickable_stock(x, True),
+            '股票名称': lambda x: make_clickable_stock(x, False)
+        })
+        
+        # 显示表格数据 - 使用st.write来显示HTML链接
+        st.write(
+            styled_df.to_html(escape=False),
+            unsafe_allow_html=True
+        )
+        
+        # 已在上方显示统计信息，这里不再需要
         
         # 为登录用户提供收藏功能
         if st.session_state.user_logged_in:
