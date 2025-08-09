@@ -555,10 +555,121 @@ elif st.session_state.current_page == "📊 股票筛选":
         # 不需要添加序号列，只需在HTML表格中修改表头
         
         # 为股票代码和股票名称添加可点击链接
-        styled_df = result.style.format({
+        format_dict = {
             '股票代码': lambda x: make_clickable_stock(x, True),
             '股票名称': lambda x: make_clickable_stock(x, False)
-        })
+        }
+        
+        # 为数值列添加格式化
+        numeric_columns = ['当前ROE', '扣非PE', 'PB', '股息', '今年来', 'ROE', 'PEG', '持有市值', '持股比', 
+                          '关注度', '便宜指数', '最新股息', '平均股息', '控盘度', '股东数', '占总股本', '推荐数',
+                          '平均ROE', '北上持股']
+        
+        # 清理数据中的单引号
+        for col in result.columns:
+            if col in result.columns:
+                try:
+                    # 尝试清理字符串中的单引号
+                    result[col] = result[col].apply(lambda x: str(x).replace("'", "") if isinstance(x, str) else x)
+                except:
+                    pass
+        
+        # 简化格式化逻辑 - 如果数据类型不对就直接显示原始数据
+        for col in numeric_columns:
+            if col in result.columns:
+                # 定义一个安全的格式化函数
+                def safe_format(x, format_type):
+                    try:
+                        if pd.isna(x) or x == '' or x == '-':
+                            return x
+                        
+                        # 移除字符串中的单引号
+                        if isinstance(x, str):
+                            x = x.replace("'", "")
+                        
+                        if format_type == 'percent':
+                            # 如果已经包含百分号，直接返回
+                            if isinstance(x, str) and '%' in x:
+                                return x
+                            # 尝试转换为百分比
+                            return f"{float(x)}%"
+                        elif format_type == 'money':
+                            # 如果已经包含"亿"，直接返回
+                            if isinstance(x, str) and '亿' in x:
+                                return x
+                            # 尝试转换为金额
+                            return f"{float(x)}亿"
+                        elif format_type == 'float':
+                            # 尝试转换为两位小数
+                            return f"{float(x):.2f}"
+                        elif format_type == 'int':
+                            # 尝试转换为整数
+                            return f"{int(float(x))}"
+                        else:
+                            # 默认返回原值
+                            return x
+                    except:
+                        # 如果转换失败，返回原始值
+                        return x
+                
+                # 根据列名应用不同的格式化
+                if col in ['当前ROE', 'ROE', '股息', '最新股息', '平均股息', '今年来', '持股比', '平均ROE']:
+                    format_dict[col] = lambda x: safe_format(x, 'percent')
+                elif col in ['持有市值']:
+                    format_dict[col] = lambda x: safe_format(x, 'money')
+                elif col in ['扣非PE', 'PB', 'PEG', '便宜指数']:
+                    format_dict[col] = lambda x: safe_format(x, 'float')
+                elif col in ['股东数', '控盘度', '推荐数']:
+                    format_dict[col] = lambda x: safe_format(x, 'int')
+                else:
+                    # 其他列保持原样
+                    format_dict[col] = lambda x: x
+        
+        # 为负值添加绿色字体样式，为今年来的正值添加红色字体样式
+        def color_values(val, col_name):
+            try:
+                # 处理百分比格式
+                if isinstance(val, str) and '%' in val:
+                    val_num = float(val.replace('%', '').strip())
+                    if val_num < 0:
+                        return 'color: green'
+                    elif col_name == '今年来' and val_num > 0:
+                        return 'color: red'
+                # 处理普通数字
+                elif isinstance(val, (int, float)):
+                    if val < 0:
+                        return 'color: green'
+                    elif col_name == '今年来' and val > 0:
+                        return 'color: red'
+                # 处理可能是数字的字符串
+                elif isinstance(val, str):
+                    try:
+                        val_num = float(val)
+                        if val_num < 0:
+                            return 'color: green'
+                        elif col_name == '今年来' and val_num > 0:
+                            return 'color: red'
+                    except:
+                        pass
+            except:
+                pass
+            return ''
+            
+        # 创建样式函数 - 处理Series和DataFrame两种情况
+        def apply_styles(df_or_series):
+            if isinstance(df_or_series, pd.Series):
+                # 处理Series对象（单列）
+                col_name = df_or_series.name
+                return pd.Series([color_values(x, col_name) for x in df_or_series], index=df_or_series.index)
+            else:
+                # 处理DataFrame对象（多列）
+                styles = pd.DataFrame('', index=df_or_series.index, columns=df_or_series.columns)
+                for col in df_or_series.columns:
+                    styles[col] = df_or_series[col].apply(lambda x: color_values(x, col))
+                return styles
+        
+        # 应用样式和格式
+        styled_df = result.style.format(format_dict).apply(apply_styles)
         
         # 显示表格数据 - 使用st.write来显示HTML链接
         st.write(

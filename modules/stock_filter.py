@@ -138,7 +138,12 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
         '北上资金持股': {
             'file': 'The_highest_proportion_of_northbound_funds_held.csv',
             'sub_types': None,
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '持有市值': '持有市值.亿',
+                '持股比': '持股比'
+            },
+            'display_name': '北上持股排名'
         },
         '热门股票': {
             'file_pattern': 'Hot_stocks_in_the_past_{}.csv',
@@ -152,7 +157,10 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '近1年': 'year',
                 '近3年': 'three_years'
             },
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '关注度': '关注度'
+            }
         },
         '最便宜股票': {
             'file_pattern': 'The_cheapest_{}.csv',
@@ -162,12 +170,19 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '不包括银行股': 'non-bank_stocks',
                 '不包括周期性股票和银行股': 'non-cyclical_non-bank_stocks'
             },
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '便宜指数': '便宜指数'
+            }
         },
         'ROE排名': {
             'file': 'Highest_ROE_ranking.csv',
             'sub_types': None,
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                'ROE': 'ROE'
+            },
+            'display_name': 'ROE最高'
         },
         'ROE连续超15%': {
             'file_pattern': 'ROE_exceeded_15p_{}_consecutive_years.csv',
@@ -175,7 +190,11 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '连续3年': 'three',
                 '连续5年': 'five'
             },
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '平均ROE': 'ROE',
+                '北上持股': '北上持股'
+            }
         },
         'PEG排名': {
             'file_pattern': 'PEG_ranking_in_the_past_{}.csv',
@@ -184,7 +203,10 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '近3年': 'three_years',
                 '近5年': 'five_years'
             },
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                'PEG': 'PEG'
+            }
         },
         '股息率排名': {
             'file_pattern': 'Highest_dividend_yield_in_the_past_{}.csv',
@@ -193,17 +215,26 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '近3年': 'three_years',
                 '近5年': 'five_years'
             },
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '平均股息': '平均股息'
+            }
         },
         '控盘度排名': {
             'file': 'Strongest_control_top200.txt',
             'sub_types': None,
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '控盘度': '控盘度'
+            }
         },
         '股东数最少排名': {
             'file': 'The_lowest_shareholders_in_history_top200.txt',
             'sub_types': None,
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '股东数': '股东数.人'
+            }
         },
         '基金重仓股': {
             'file_pattern': 'Fund_holdings_ranking_{}.csv',
@@ -214,7 +245,10 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '2024Q3': '2024Q3',
                 '2024Q2': '2024Q2'
             },
-            'date_dependent': False  # 不依赖日期文件夹，在根目录
+            'date_dependent': False,  # 不依赖日期文件夹，在根目录
+            'extra_columns': {
+                '占总股本': '基金总持有'
+            }
         },
         '券商研报推荐': {
             'file_pattern': 'Research_report_recommends_hot_stocks_in_the_past_{}.csv',
@@ -225,7 +259,10 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 '近6月': 'six_months',
                 '近1年': 'year'
             },
-            'date_dependent': True  # 依赖日期文件夹
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '推荐数': '推荐数'
+            }
         }
     }
     
@@ -238,6 +275,9 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
     
     # 预先加载股票基本信息
     stock_info = {}
+    
+    # 存储额外的列数据
+    extra_data = {}
     
     # 首先加载所有可能的股票信息文件以获取完整的股票信息
     load_all_stock_info(stock_info, selected_date)
@@ -275,23 +315,166 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
                 df = pd.read_csv(file_path, sep='\t', encoding='utf-8')
                 if '代码' in df.columns:
                     stock_codes = extract_stock_codes(df['代码'])
+                    code_column = '代码'
                 else:
                     stock_codes = extract_stock_codes(df.iloc[:, 1])
+                    code_column = df.columns[1]
             else:
                 df = pd.read_csv(file_path, encoding='utf-8')
                 code_columns = ['代码', '股票代码', 'code', 'stock_code', '股票', '序']
                 stock_codes = set()
+                code_column = None
                 
                 for col in code_columns:
                     if col in df.columns:
                         stock_codes = extract_stock_codes(df[col])
+                        code_column = col
                         break
                 
                 if not stock_codes:
                     stock_codes = extract_stock_codes(df.iloc[:, 0])
+                    code_column = df.columns[0]
             
             # 更新股票信息
             update_stock_info(stock_info, df)
+            
+            # 提取额外列数据
+            if 'extra_columns' in type_config:
+                # 打印可用的列名，帮助调试
+                print(f"文件 {file_path} 中的列名: {list(df.columns)}")
+                
+                for display_name, source_column in type_config['extra_columns'].items():
+                    # 确保额外数据字典已初始化
+                    if display_name not in extra_data:
+                        extra_data[display_name] = {}
+                    
+                    # 尝试从数据文件中提取额外列数据
+                    # 对于ROE连续超15%的特殊处理
+                    if stock_type == 'ROE连续超15%' and display_name == '平均ROE':
+                        # 尝试多种可能的ROE列名
+                        roe_columns = ['ROE', 'roe', '平均ROE', '平均roe', 'ROE(%)', 'roe(%)', '平均ROE(%)', '平均roe(%)']
+                        found_column = None
+                        for col in roe_columns:
+                            if col in df.columns:
+                                found_column = col
+                                break
+                        
+                        if found_column:
+                            print(f"在ROE连续超15%文件中找到ROE列: {found_column}")
+                            for _, row in df.iterrows():
+                                try:
+                                    # 提取股票代码
+                                    code_val = row[code_column]
+                                    code_str = str(code_val).replace("'", "").strip()
+                                    
+                                    # 处理可能的代码格式
+                                    if '.' in code_str:
+                                        code_part = code_str.split('.')[0]
+                                        clean_code = re.sub(r'^(SH|SZ)', '', code_part)
+                                    elif ',' in code_str:
+                                        parts = code_str.split(',')
+                                        if len(parts) > 1:
+                                            clean_code = re.sub(r'^(SH|SZ)', '', parts[1].strip())
+                                        else:
+                                            clean_code = code_str
+                                    else:
+                                        clean_code = re.sub(r'^(SH|SZ)', '', code_str)
+                                    
+                                    # 确保代码只包含数字并标准化为6位
+                                    clean_code = re.sub(r'\D', '', clean_code)
+                                    if clean_code:
+                                        stock_code = clean_code.zfill(6)
+                                        
+                                        # 保存额外列数据
+                                        value = row[found_column]
+                                        if pd.notna(value):
+                                            extra_data[display_name][stock_code] = value
+                                except Exception as e:
+                                    print(f"处理股票 {code_column} 的额外数据时出错: {e}")
+                        else:
+                            print(f"警告: 在ROE连续超15%文件中未找到ROE列")
+                            # 如果找不到ROE列，尝试从当前ROE数据中获取
+                            for stock_code in stock_codes:
+                                if stock_code in stock_info and '当前ROE' in stock_info[stock_code]:
+                                    extra_data[display_name][stock_code] = stock_info[stock_code]['当前ROE']
+                    # 对于北上持股的特殊处理
+                    elif stock_type == 'ROE连续超15%' and display_name == '北上持股':
+                        # 首先检查文件中是否已经有北上持股列
+                        if '北上持股' in df.columns:
+                            print(f"在ROE连续超15%文件中找到北上持股列")
+                            for _, row in df.iterrows():
+                                try:
+                                    # 提取股票代码
+                                    code_val = row[code_column]
+                                    code_str = str(code_val).replace("'", "").strip()
+                                    
+                                    # 处理可能的代码格式
+                                    if '.' in code_str:
+                                        code_part = code_str.split('.')[0]
+                                        clean_code = re.sub(r'^(SH|SZ)', '', code_part)
+                                    elif ',' in code_str:
+                                        parts = code_str.split(',')
+                                        if len(parts) > 1:
+                                            clean_code = re.sub(r'^(SH|SZ)', '', parts[1].strip())
+                                        else:
+                                            clean_code = code_str
+                                    else:
+                                        clean_code = re.sub(r'^(SH|SZ)', '', code_str)
+                                    
+                                    # 确保代码只包含数字并标准化为6位
+                                    clean_code = re.sub(r'\D', '', clean_code)
+                                    if clean_code:
+                                        stock_code = clean_code.zfill(6)
+                                        
+                                        # 保存额外列数据
+                                        value = row['北上持股']
+                                        if pd.notna(value):
+                                            extra_data[display_name][stock_code] = value
+                                except Exception as e:
+                                    print(f"处理股票 {code_column} 的北上持股数据时出错: {e}")
+                        # 如果文件中没有北上持股列，则从北上资金持股数据中获取
+                        else:
+                            print(f"在ROE连续超15%文件中未找到北上持股列，尝试从北上资金持股数据获取")
+                            if '北上资金持股' in stock_sets:
+                                for stock_code in stock_codes:
+                                    if stock_code in stock_sets['北上资金持股']:
+                                        extra_data[display_name][stock_code] = '是'
+                                    else:
+                                        extra_data[display_name][stock_code] = '否'
+                    # 常规处理其他列
+                    elif source_column in df.columns:
+                        for _, row in df.iterrows():
+                            try:
+                                # 提取股票代码
+                                code_val = row[code_column]
+                                code_str = str(code_val).replace("'", "").strip()
+                                
+                                # 处理可能的代码格式
+                                if '.' in code_str:
+                                    code_part = code_str.split('.')[0]
+                                    clean_code = re.sub(r'^(SH|SZ)', '', code_part)
+                                elif ',' in code_str:
+                                    parts = code_str.split(',')
+                                    if len(parts) > 1:
+                                        clean_code = re.sub(r'^(SH|SZ)', '', parts[1].strip())
+                                    else:
+                                        clean_code = code_str
+                                else:
+                                    clean_code = re.sub(r'^(SH|SZ)', '', code_str)
+                                
+                                # 确保代码只包含数字并标准化为6位
+                                clean_code = re.sub(r'\D', '', clean_code)
+                                if clean_code:
+                                    stock_code = clean_code.zfill(6)
+                                    
+                                    # 保存额外列数据
+                                    value = row[source_column]
+                                    if pd.notna(value):
+                                        extra_data[display_name][stock_code] = value
+                            except Exception as e:
+                                print(f"处理股票 {code_column} 的额外数据时出错: {e}")
+                    else:
+                        print(f"警告: 在{stock_type}文件中未找到列 '{source_column}'，可用列: {list(df.columns)}")
             
             stock_sets[stock_type] = stock_codes
             
@@ -322,12 +505,21 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
             row['股票名称'] = ''
             row['所属行业'] = ''
         
-        # 添加筛选标记
-        for stock_type in selected_types:
-            if stock_type in stock_sets and stock_code in stock_sets[stock_type]:
-                row[f'{stock_type}'] = '✓'
+        # 添加默认显示列
+        row['当前ROE'] = stock_info[stock_code].get('当前ROE', '')
+        row['扣非PE'] = stock_info[stock_code].get('扣非PE', '')
+        row['PB'] = stock_info[stock_code].get('PB', '')
+        row['股息'] = stock_info[stock_code].get('股息', '')
+        row['今年来'] = stock_info[stock_code].get('今年来', '')
+        
+        # 添加额外列数据
+        for column_name, data_dict in extra_data.items():
+            if stock_code in data_dict:
+                row[column_name] = data_dict[stock_code]
             else:
-                row[f'{stock_type}'] = '✗'
+                row[column_name] = ''
+        
+        # 不再添加筛选标记列，因为已经有了对应的额外信息列
         
         # 行业筛选
         if industry_filter and row['所属行业'] and row['所属行业'] not in industry_filter:
@@ -338,8 +530,24 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
     result_df = pd.DataFrame(result_data)
     
     # 设置列顺序
-    cols = ['股票代码', '股票名称', '所属行业'] + [f'{t}' for t in selected_types]
-    result_df = result_df[cols]
+    base_cols = ['股票代码', '股票名称', '所属行业']
+    default_cols = ['当前ROE', '扣非PE', 'PB', '股息', '今年来']
+    
+    # 不再需要获取股票类型显示名称，因为不再显示这些列
+    
+    # 添加额外列，但避免重复
+    extra_cols = []
+    for col in extra_data.keys():
+        # 避免重复列 - 特别处理'ROE'和'当前ROE'
+        if col not in default_cols and not (col == 'ROE' and '当前ROE' in default_cols):
+            extra_cols.append(col)
+    
+    # 最终列顺序 - 不再包含股票类型列
+    cols = base_cols + default_cols + extra_cols
+    
+    # 确保所有列都在DataFrame中
+    valid_cols = [col for col in cols if col in result_df.columns]
+    result_df = result_df[valid_cols]
     
     return result_df
 
@@ -471,6 +679,23 @@ def update_stock_info(stock_info, df):
             industry_column = col
             break
     
+    # 检查是否有默认显示列
+    default_columns = {
+        '当前ROE': ['当前ROE', 'ROE', 'roe'],
+        '扣非PE': ['扣非PE', '扣非pe', 'PE', 'pe'],
+        'PB': ['PB', 'pb'],
+        '股息': ['股息', '股息率', '股息%'],
+        '今年来': ['今年来', '今年涨幅', '年初至今']
+    }
+    
+    # 映射实际列名到标准列名
+    column_mapping = {}
+    for std_col, possible_cols in default_columns.items():
+        for col in possible_cols:
+            if col in df.columns:
+                column_mapping[col] = std_col
+                break
+    
     # 尝试提取股票信息
     for _, row in df.iterrows():
         code = ""
@@ -562,6 +787,16 @@ def update_stock_info(stock_info, df):
                     stock_info[code]['名称'] = name
                 if not stock_info[code]['行业'] and industry:
                     stock_info[code]['行业'] = industry
+            
+            # 提取默认显示列数据
+            for src_col, dst_col in column_mapping.items():
+                if src_col in df.columns:
+                    try:
+                        value = row[src_col]
+                        if pd.notna(value):
+                            stock_info[code][dst_col] = value
+                    except Exception as e:
+                        print(f"提取 {code} 的 {src_col} 数据时出错: {e}")
 
 def get_stock_type_options():
     """获取股票类型选项"""
