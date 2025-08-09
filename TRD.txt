@@ -1,0 +1,57 @@
+Investment and Financial Management 投资理财系统
+
+功能说明
+    1、根据基金数据进行筛选，提供计算年收益率，针对连续收益率大于给定百分比（可选择3%、4.2%、5%、8%、大于8%），过滤上市年限等
+    2、根据多种类型的股票数据，进行类型、行业等多个维度的综合过滤
+    
+数据说明
+    数据分基金和股票，按类型（fund、stock）存储在data目录下面，分日期（年/月）分别存放，注意：股票机构和基金持股排的数据是阶段固定数据放在stock目录下面。
+    2.1基金的数据（txt格式）
+        记录的内容格式为：“序号    基金代码    基金简称    日期    单位净值    累计净值    日增长率    近1周    近1月    近3月    近6月    近1年    近2年    近3年    今年来    成立来    自定义 ”
+    2.2股票数据（csv格式）
+        2.2.1 北上资金持股比最高排名： The_highest_proportion_of_northbound_funds_held.csv
+        2.2.2 热门股票(根据用户关注度进行排名)，分近1天、近3天、近1周、1个月、近3月、近6月、近1年、近3年。
+            近1天的热门股票：Hot_stocks_in_the_past_day.csv
+            近3天的热门股票：Hot_stocks_in_the_past_three_days.csv
+            近1周的热门股票：Hot_stocks_in_the_past_week.csv
+            近1月的热门股票：Hot_stocks_in_the_past_month.csv
+            近3月的热门股票：Hot_stocks_in_the_past_three_months.csv
+            近6月的热门股票：Hot_stocks_in_the_past_six_months.csv
+            近1年的热门股票：Hot_stocks_in_the_past_year.csv
+            近3年的热门股票：Hot_stocks_in_the_past_three_years.csv
+        2.2.3 最便宜的股票,分3类是否包括周期性的钢铁、地产股票，是否包括银行股票
+            最便宜的股票(all)：The_cheapest_stocks.csv
+            最便宜的股票(不包括周期性股票-钢铁、地产)：The_cheapest_non-cyclical_stocks.csv
+            最便宜的股票(不包括银行股)：The_cheapest_non-bank_stocks.csv
+            最便宜的股票(不包括周期性股票和银行股)：The_cheapest_non-cyclical_non-bank_stocks.csv
+        2.2.4 净利润增速最高排名(连续x年)
+        2.2.5 ROE最高排名(滚动ROE = 最近4个季度的归母净利润 / ((期初归母净资产 + 期末归母净资产) / 2))
+            ROE最高排名：Highest_ROE_ranking.csv
+        2.2.6 ROE连续超过百分比的股票排名
+            连续3年超15%的股票排名：ROE_exceeded_15p_three_consecutive_years.csv
+            连续5年超15%的股票排名：ROE_exceeded_15p_five_consecutive_years.csv
+        2.2.7 股票扣非PEG排名，分近1年、近3年、近5年
+            近1年扣非PEG排名：PEG_ranking_in_the_past_year.csv
+            近3年扣非PEG排名：PEG_ranking_in_the_past_three_years.csv
+            近5年扣非PEG排名：PEG_ranking_in_the_past_five_years.csv
+        2.2.8 股息率最高排名,分近2年、近3年、近5年
+            近2年股息率最高：Highest_dividend_yield_in_the_past_two_years.csv
+            近3年股息率最高：Highest_dividend_yield_in_the_past_three_years.csv
+            近5年股息率最高：Highest_dividend_yield_in_the_past_five_years.csv
+        2.2.9 股票控盘度最强排名（说明：控盘度：人均持有市值占股票的自由流通A股市值比；乌龟量化原创算法，控盘度的算法与以下2个因子紧密相关：公司的股东总数和公司的自由流通A股市值；排除了近3年上市的新股）
+            记录的内容格式：“序    代码    股票    价    涨    控盘度    股东数.人    更新日    北上持股    扣非PE    PB    股息    A股市值    今年来    行业”
+            股票控盘度最强排名Top200：Strongest_control_top200.txt
+        2.2.10 股东数历史上最少排名
+            股东数历史上最少排名Top200：The_lowest_shareholders_in_history_top200.txt
+        2.2.11 基金前100大重仓股持仓股，按年和季度
+            2025Q2：Fund_holdings_ranking_2025Q2.csv
+            2025Q1：Fund_holdings_ranking_2025Q1.csv
+            2024Q4：Fund_holdings_ranking_2024Q4.csv
+            2024Q3：Fund_holdings_ranking_2024Q3.csv
+            2024Q2：Fund_holdings_ranking_2024Q2.csv
+        2.2.12 券商研报推荐热股排名
+            近1周：Research_report_recommends_hot_stocks_in_the_past_week.csv
+            近3周：Research_report_recommends_hot_stocks_in_the_past_three_weeks.csv
+            近2月：Research_report_recommends_hot_stocks_in_the_past_two_months.csv
+            近6月：Research_report_recommends_hot_stocks_in_the_past_six_months.csv
+            近1年：Research_report_recommends_hot_stocks_in_the_past_year.csv
