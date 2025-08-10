@@ -299,12 +299,12 @@ elif st.session_state.current_page == "📈 基金筛选":
         )
     
     # 主内容区域 - 使用更紧凑的标题样式
-    st.markdown("<h2 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📈 基金筛选系统</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📈 基金筛选系统</h2>", unsafe_allow_html=True)
     
     # 重新排列页面组件
     if len(result) > 0:
         # 先显示筛选结果统计
-        st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -516,11 +516,11 @@ elif st.session_state.current_page == "📊 股票筛选":
         result = stock_filter(selected_types, sub_types, industry_filter, selected_date, roe_filter, dividend_filter)
     
     # 主内容区域 - 使用更紧凑的标题样式
-    st.markdown("<h2 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 股票筛选系统</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 股票筛选系统</h2>", unsafe_allow_html=True)
     
     if len(result) > 0:
         # 先显示筛选结果统计
-        st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -573,7 +573,13 @@ elif st.session_state.current_page == "📊 股票筛选":
                 # 需要找到对应行的股票代码
                 try:
                     code = str(result.loc[result['股票名称'] == val, '股票代码'].values[0]).zfill(6)
-                    return f'<a href="https://stockpage.10jqka.com.cn/{code}" target="_blank">{val}</a>'
+                    # 判断交易所并添加前缀
+                    if code.startswith(('6', '9')):
+                        exchange_prefix = "SH"  # 沪市（主板/科创板）
+                    else:
+                        exchange_prefix = "SZ"  # 深市（主板/创业板）
+
+                    return f'<a href="https://xueqiu.com/S/{exchange_prefix}{code}" target="_blank">{val}</a>'
                 except:
                     return val  # 如果找不到对应的股票代码，则返回原值
         
