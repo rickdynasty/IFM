@@ -471,34 +471,9 @@ elif st.session_state.current_page == "📊 股票筛选":
                     key=f"sub_{stock_type}"
                 )
                 sub_types[stock_type] = sub_type
-    
-    # 行业筛选
-    st.sidebar.markdown("#### 🏭 行业筛选")
-    show_industry_filter = st.sidebar.checkbox("启用行业筛选", False)
-    industry_filter = []
-    
-    if show_industry_filter:
-        all_industries = get_industry_options(selected_date)
-        industry_filter = st.sidebar.multiselect(
-            "选择行业（可多选）",
-            all_industries,
-            default=[],
-            help="选择行业进行筛选，不选择则显示全部行业"
-        )
         
     # 新增ROE和股息筛选
     st.sidebar.markdown("#### 📊 指标筛选")
-    
-    # ROE筛选
-    show_roe_filter = st.sidebar.checkbox("启用ROE筛选", False)
-    roe_filter = None
-    if show_roe_filter:
-        roe_filter = st.sidebar.selectbox(
-            "ROE > (%)",
-            [8, 10, 12, 15],
-            index=0,  # 默认8%
-            help="筛选ROE大于等于选定值的股票"
-        )
     
     # 股息筛选
     show_dividend_filter = st.sidebar.checkbox("启用股息筛选", False)
@@ -509,6 +484,31 @@ elif st.session_state.current_page == "📊 股票筛选":
             [1, 3, 5, 8],
             index=1,  # 默认3%
             help="筛选股息率大于等于选定值的股票"
+        )
+
+    # ROE筛选
+    show_roe_filter = st.sidebar.checkbox("启用ROE筛选", False)
+    roe_filter = None
+    if show_roe_filter:
+        roe_filter = st.sidebar.selectbox(
+            "ROE > (%)",
+            [8, 10, 12, 15],
+            index=2,  # 默认12%, 12%是通过ROE来判断一个公司好坏的分水岭指标
+            help="筛选ROE大于等于选定值的股票"
+        )
+
+    # 行业筛选
+    st.sidebar.markdown("#### 🏭 行业筛选")
+    show_industry_filter = st.sidebar.checkbox("启用行业筛选", False)
+    industry_filter = []
+
+    if show_industry_filter:
+        all_industries = get_industry_options(selected_date)
+        industry_filter = st.sidebar.multiselect(
+            "选择行业（可多选）",
+            all_industries,
+            default=[],
+            help="选择行业进行筛选，不选择则显示全部行业"
         )
     
     # 执行筛选

@@ -64,7 +64,7 @@
 
 4. 运行应用
    ```
-   streamlit run app_v2.py
+   streamlit run app.py
    ```
 
 ## 使用方法
@@ -75,19 +75,19 @@
 
 ## 目录结构
 ```
-├── app_v2.py                # 主程序入口
+├── app.py                # 主程序入口
 ├── modules/                 # 功能模块
 │   ├── __init__.py          # 包初始化
 │   ├── config.py            # 全局配置
 │   ├── utils.py             # 工具函数
-│   ├── fund_filter_v2.py    # 基金筛选模块
-│   └── stock_filter_v2.py   # 股票筛选模块
+│   ├── fund_filter.py    # 基金筛选模块
+│   └── stock_filter.py   # 股票筛选模块
 ├── data/                    # 数据目录
 │   ├── fund/                # 基金数据
 │   └── stock/               # 股票数据
 ├── user_data/               # 用户数据（会员设置等）
 ├── requirements.txt         # 依赖库
-└── README_v2.md             # 项目说明
+└── README.md             # 项目说明
 ```
 
 ## 数据说明
