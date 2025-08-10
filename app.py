@@ -374,7 +374,7 @@ elif st.session_state.current_page == "📈 基金筛选":
                 # 基金简称直接链接
                 # 需要找到对应行的基金代码
                 code = str(result.loc[result['基金简称'] == val, '基金代码'].values[0]).zfill(6)
-                return f'<a href="https://fund.10jqka.com.cn/{code}" target="_blank">{val}</a>'
+                return f'<a href="https://fund.eastmoney.com/{code}.html" target="_blank">{val}</a>'
         
         # 不需要添加序号列，只需在HTML表格中修改表头
         
