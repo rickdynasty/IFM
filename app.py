@@ -485,10 +485,35 @@ elif st.session_state.current_page == "📊 股票筛选":
             default=[],
             help="选择行业进行筛选，不选择则显示全部行业"
         )
+        
+    # 新增ROE和股息筛选
+    st.sidebar.markdown("#### 📊 指标筛选")
+    
+    # ROE筛选
+    show_roe_filter = st.sidebar.checkbox("启用ROE筛选", False)
+    roe_filter = None
+    if show_roe_filter:
+        roe_filter = st.sidebar.selectbox(
+            "ROE > (%)",
+            [8, 10, 12, 15],
+            index=0,  # 默认8%
+            help="筛选ROE大于等于选定值的股票"
+        )
+    
+    # 股息筛选
+    show_dividend_filter = st.sidebar.checkbox("启用股息筛选", False)
+    dividend_filter = None
+    if show_dividend_filter:
+        dividend_filter = st.sidebar.selectbox(
+            "股息 > (%)",
+            [1, 3, 5, 8],
+            index=1,  # 默认3%
+            help="筛选股息率大于等于选定值的股票"
+        )
     
     # 执行筛选
     with st.spinner("正在筛选股票数据..."):
-        result = stock_filter(selected_types, sub_types, industry_filter, selected_date)
+        result = stock_filter(selected_types, sub_types, industry_filter, selected_date, roe_filter, dividend_filter)
     
     # 主内容区域 - 使用更紧凑的标题样式
     st.markdown("<h2 style='margin-top:0; padding-top:0; margin-bottom:0.5rem;'>📊 股票筛选系统</h2>", unsafe_allow_html=True)

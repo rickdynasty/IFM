@@ -113,7 +113,7 @@ def get_current_date():
 extract_stock_codes.stock_names = {}
 extract_stock_codes.stock_industries = {}
 
-def stock_filter(selected_types=None, sub_types=None, industry_filter=None, selected_date=None):
+def stock_filter(selected_types=None, sub_types=None, industry_filter=None, selected_date=None, roe_filter=None, dividend_filter=None):
     """股票筛选函数
     
     Args:
@@ -121,6 +121,8 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
         sub_types: 每种类型选择的子类型
         industry_filter: 行业筛选条件
         selected_date: 选择的日期，格式为 "YYYY.MM"，如果为None则使用当前日期
+        roe_filter: ROE筛选阈值，如8表示筛选ROE大于等于8%的股票
+        dividend_filter: 股息率筛选阈值，如3表示筛选股息率大于等于3%的股票
     """
     if selected_types is None:
         selected_types = []
@@ -217,7 +219,7 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
             },
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '平均股息': '平均股息'
+                '平均股息': '平均 股息'  # 注意这里有空格
             }
         },
         '控盘度排名': {
@@ -522,18 +524,85 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
         # 不再添加筛选标记列，因为已经有了对应的额外信息列
         
         # 行业筛选
+        skip_row = False
         if industry_filter and row['所属行业'] and row['所属行业'] not in industry_filter:
-            continue
-            
-        result_data.append(row)
+            skip_row = True
+        
+        if not skip_row:
+            result_data.append(row)
     
     result_df = pd.DataFrame(result_data)
+    
+    # 应用ROE筛选
+    if roe_filter is not None and not result_df.empty:
+        filtered_rows = []
+        for _, row in result_df.iterrows():
+            roe_value = None
+            
+            # 尝试从不同列获取ROE值
+            if '平均ROE' in row and row['平均ROE']:
+                try:
+                    roe_str = str(row['平均ROE']).replace('%', '')
+                    roe_value = float(roe_str) if roe_str and roe_str != '-' else None
+                except:
+                    pass
+            
+            if roe_value is None and '当前ROE' in row and row['当前ROE']:
+                try:
+                    roe_str = str(row['当前ROE']).replace('%', '')
+                    roe_value = float(roe_str) if roe_str and roe_str != '-' else None
+                except:
+                    pass
+            
+            if roe_value is None and 'ROE' in row and row['ROE']:
+                try:
+                    roe_str = str(row['ROE']).replace('%', '')
+                    roe_value = float(roe_str) if roe_str and roe_str != '-' else None
+                except:
+                    pass
+                    
+            # 判断是否符合筛选条件
+            if roe_value is not None and roe_value >= roe_filter:
+                filtered_rows.append(row)
+        
+        if filtered_rows:
+            result_df = pd.DataFrame(filtered_rows)
+        else:
+            return pd.DataFrame()  # 如果没有符合条件的行，返回空DataFrame
+    
+    # 应用股息筛选
+    if dividend_filter is not None and not result_df.empty:
+        filtered_rows = []
+        for _, row in result_df.iterrows():
+            dividend_value = None
+            
+            # 尝试从不同列获取股息值
+            if '平均股息' in row and row['平均股息']:
+                try:
+                    dividend_str = str(row['平均股息']).replace('%', '')
+                    dividend_value = float(dividend_str) if dividend_str and dividend_str != '-' else None
+                except:
+                    pass
+            
+            if dividend_value is None and '股息' in row and row['股息']:
+                try:
+                    dividend_str = str(row['股息']).replace('%', '')
+                    dividend_value = float(dividend_str) if dividend_str and dividend_str != '-' else None
+                except:
+                    pass
+                    
+            # 判断是否符合筛选条件
+            if dividend_value is not None and dividend_value >= dividend_filter:
+                filtered_rows.append(row)
+        
+        if filtered_rows:
+            result_df = pd.DataFrame(filtered_rows)
+        else:
+            return pd.DataFrame()  # 如果没有符合条件的行，返回空DataFrame
     
     # 设置列顺序
     base_cols = ['股票代码', '股票名称', '所属行业']
     default_cols = ['当前ROE', '扣非PE', 'PB', '股息', '今年来']
-    
-    # 不再需要获取股票类型显示名称，因为不再显示这些列
     
     # 添加额外列，但避免重复
     extra_cols = []
