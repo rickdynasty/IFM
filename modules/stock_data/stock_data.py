@@ -64,10 +64,22 @@ class StockData(BaseData):
                 
                 if not self.date_dependent:
                     # 不依赖日期目录，直接从根目录读取
-                    return os.path.join(
-                        os.path.dirname(os.path.dirname(self.data_dir)), 
-                        self.config['file_pattern'].format(sub_type_value)
-                    )
+                    # 特殊处理基金重仓股文件
+                    if self.stock_type == '基金重仓股':
+                        # 基金重仓股文件在data/stock/目录下
+                        file_path = os.path.join(
+                            'data', 'stock',
+                            self.config['file_pattern'].format(sub_type_value)
+                        )
+                    else:
+                        # 其他非日期依赖文件
+                        file_path = os.path.join(
+                            os.path.dirname(os.path.dirname(self.data_dir)), 
+                            self.config['file_pattern'].format(sub_type_value)
+                        )
+                    print(f"非日期依赖文件路径: {file_path}")
+                    print(f"文件是否存在: {os.path.exists(file_path)}")
+                    return file_path
                 else:
                     # 依赖日期目录
                     return os.path.join(self.data_dir, self.config['file_pattern'].format(sub_type_value))
@@ -82,7 +94,16 @@ class StockData(BaseData):
         Returns:
             bool: 加载是否成功
         """
-        if not self.file_path or not os.path.exists(self.file_path):
+        print(f"开始加载数据: {self.stock_type}, 子类型: {self.sub_type}")
+        print(f"文件路径: {self.file_path}")
+        
+        if not self.file_path:
+            print("文件路径为空")
+            self._is_loaded = False
+            return False
+            
+        if not os.path.exists(self.file_path):
+            print(f"文件不存在: {self.file_path}")
             self._is_loaded = False
             return False
         
@@ -90,6 +111,37 @@ class StockData(BaseData):
             # 根据文件类型加载数据
             if self.file_path.endswith('.txt'):
                 df = self._read_csv_file(self.file_path, sep='\t')
+            elif 'Fund_holdings_ranking' in self.file_path:
+                # 基金重仓股文件需要特殊处理
+                try:
+                    # 先尝试读取前几行查看结构
+                    with open(self.file_path, 'r', encoding='utf-8') as f:
+                        first_lines = [f.readline() for _ in range(3)]
+                    print(f"基金重仓股文件前几行: {first_lines}")
+                    
+                    # 基金重仓股文件有特殊格式，使用标准读取
+                    df = pd.read_csv(self.file_path)
+                    print(f"基金重仓股文件列名: {df.columns.tolist()}")
+                    
+                    # 处理列名，去除可能的空格
+                    df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
+                    
+                    # 检查是否有占总股本列
+                    if '占总股本' in df.columns:
+                        print("找到'占总股本'列")
+                    else:
+                        print(f"未找到'占总股本'列，可用列: {df.columns.tolist()}")
+                        
+                        # 尝试查找包含"占总股本"的列
+                        for col in df.columns:
+                            if isinstance(col, str) and '占总股本' in col:
+                                print(f"找到包含'占总股本'的列: {col}")
+                                # 重命名列
+                                df.rename(columns={col: '占总股本'}, inplace=True)
+                                break
+                except Exception as e:
+                    print(f"读取基金重仓股文件失败: {e}")
+                    df = pd.DataFrame()
             else:
                 df = self._read_csv_file(self.file_path)
             

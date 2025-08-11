@@ -152,7 +152,7 @@ class StockDataFactory:
             },
             'date_dependent': False,  # 不依赖日期文件夹，在根目录
             'extra_columns': {
-                '占总股本': '基金总持有'
+                '占总股本': '占总股本'
             }
         },
         '券商研报推荐': {
