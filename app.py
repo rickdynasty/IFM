@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 # 导入自定义模块
 from modules.fund_filter import fund_filter, get_fund_managers, get_fund_companies
-from modules.stock_filter import stock_filter, get_stock_type_options, get_sub_type_options, get_industry_options
+from modules.stock_filter_new import stock_filter, get_stock_type_options, get_sub_type_options, get_industry_options
 from modules.utils import load_css, format_number, user_auth, save_user_preferences
 from modules.config import APP_TITLE, APP_ICON, APP_VERSION, DATA_PATH
 
@@ -425,7 +425,7 @@ elif st.session_state.current_page == "📊 股票筛选":
     st.sidebar.markdown("### 🔍 筛选条件")
     
     # 日期选择
-    from modules.stock_filter import get_available_dates, get_current_date
+    from modules.stock_filter_new import get_available_dates, get_current_date
     
     available_dates = get_available_dates()
     current_date = get_current_date()
