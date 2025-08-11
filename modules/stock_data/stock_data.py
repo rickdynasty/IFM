@@ -186,7 +186,7 @@ class StockData(BaseData):
             '当前ROE': ['当前ROE', 'ROE', 'roe'],
             '扣非PE': ['扣非PE', '扣非pe', 'PE', 'pe'],
             'PB': ['PB', 'pb'],
-            '股息': ['股息', '股息率', '股息%', '最新股息'],  # 添加'最新股息'作为可能的股息列
+            '股息率': ['股息', '股息率', '股息%', '最新股息'],  # 添加'最新股息'作为可能的股息列
             '今年来': ['今年来', '今年涨幅', '年初至今']
         }
         
@@ -256,6 +256,8 @@ class StockData(BaseData):
                 self._extract_roe_data(df, code_column, display_name)
             elif self.stock_type == 'ROE连续超15%' and display_name == '北上持股':
                 self._extract_northbound_data(df, code_column, display_name)
+            elif display_name == '股息率':
+                self._extract_dividend_data(df, code_column, display_name)
             # 常规情况
             elif source_column in df.columns:
                 for _, row in df.iterrows():
@@ -320,6 +322,36 @@ class StockData(BaseData):
             # 如果找不到北上持股列，默认标记为"否"
             for code in self.stock_codes:
                 self.extra_data[display_name][code] = '否'
+    
+    def _extract_dividend_data(self, df: pd.DataFrame, code_column: str, display_name: str) -> None:
+        """
+        提取股息率数据的特殊处理
+        
+        Args:
+            df: 数据帧
+            code_column: 代码列名
+            display_name: 显示名称
+        """
+        # 尝试多种可能的股息列名
+        dividend_columns = ['股息', '股息率', '最新股息', '股息%', '股息(%)', '股息率(%)']
+        
+        # 查找匹配的列
+        found_column = next((col for col in dividend_columns if col in df.columns), None)
+        
+        if found_column:
+            # 从数据帧提取股息数据
+            for _, row in df.iterrows():
+                try:
+                    code = self.clean_code(row[code_column])
+                    if code and pd.notna(row[found_column]):
+                        self.extra_data[display_name][code] = str(row[found_column]).strip()
+                except Exception:
+                    pass
+        else:
+            # 如果没有找到股息列，尝试使用stock_info中的股息数据
+            for code in self.stock_codes:
+                if code in self.stock_info and '股息' in self.stock_info[code]:
+                    self.extra_data[display_name][code] = self.stock_info[code]['股息']
     
     def get_data(self, key: str = None) -> Any:
         """
@@ -409,6 +441,14 @@ class StockData(BaseData):
             # 尝试从额外数据中获取平均股息
             if '平均股息' in self.extra_data and code in self.extra_data['平均股息']:
                 dividend_value = self.safe_get_numeric(self.extra_data['平均股息'][code])
+            
+            # 尝试从额外数据中获取股息率
+            if dividend_value is None and '股息率' in self.extra_data and code in self.extra_data['股息率']:
+                dividend_value = self.safe_get_numeric(self.extra_data['股息率'][code])
+            
+            # 尝试从股票信息中获取股息率
+            if dividend_value is None and code in self.stock_info and '股息率' in self.stock_info[code]:
+                dividend_value = self.safe_get_numeric(self.stock_info[code]['股息率'])
             
             # 尝试从股票信息中获取股息
             if dividend_value is None and code in self.stock_info and '股息' in self.stock_info[code]:

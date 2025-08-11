@@ -602,7 +602,7 @@ def stock_filter(selected_types=None, sub_types=None, industry_filter=None, sele
     
     # 设置列顺序
     base_cols = ['股票代码', '股票名称', '所属行业']
-    default_cols = ['当前ROE', '扣非PE', 'PB', '股息', '今年来']
+    default_cols = ['今年来', '行业']
     
     # 添加额外列，但避免重复
     extra_cols = []

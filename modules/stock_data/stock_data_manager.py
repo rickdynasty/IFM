@@ -251,6 +251,9 @@ class StockDataManager:
                     if '平均股息' in info:
                         dividend_value = StockData.safe_get_numeric(info['平均股息'])
                     
+                    if dividend_value is None and '股息率' in info:
+                        dividend_value = StockData.safe_get_numeric(info['股息率'])
+                    
                     if dividend_value is None and '股息' in info:
                         dividend_value = StockData.safe_get_numeric(info['股息'])
                     
@@ -278,16 +281,19 @@ class StockDataManager:
         # 构建结果DataFrame
         result_data = []
         
-        # 标准列顺序 - 将"所属行业"移到最后
+        # 标准列顺序 - 基本列和财务指标列
         base_cols = ['股票代码', '股票名称']
-        default_cols = ['当前ROE', '扣非PE', 'PB', '股息', '今年来']
+        finance_cols = ['股息率']
+        end_cols = ['今年来', '行业']  # 这些列将放在最后
         
         # 收集所有可用的额外列
         extra_cols = set()
         for instance in self.stock_data_instances.values():
             for col_name in instance.extra_data.keys():
                 # 避免重复列
-                if col_name not in default_cols and not (col_name == 'ROE' and '当前ROE' in default_cols):
+                if (col_name not in finance_cols and 
+                    col_name not in end_cols and 
+                    not (col_name == 'ROE' and '当前ROE' in finance_cols)):
                     extra_cols.add(col_name)
         
         # 为每个股票构建数据行
@@ -301,11 +307,15 @@ class StockDataManager:
             row = {
                 '股票代码': code,
                 '股票名称': info.get('名称', ''),
-                '所属行业': info.get('行业', '')
+                '行业': info.get('行业', '')
             }
             
-            # 默认财务指标
-            for col in default_cols:
+            # 财务指标
+            for col in finance_cols:
+                row[col] = info.get(col, '')
+                
+            # 末尾列（今年来、行业）
+            for col in end_cols:
                 row[col] = info.get(col, '')
             
             # 额外列数据
@@ -318,8 +328,8 @@ class StockDataManager:
         result_df = pd.DataFrame(result_data)
         
         if not result_df.empty:
-            # 确定最终列顺序 - "所属行业"放在最后
-            cols = base_cols + default_cols + list(extra_cols) + ['所属行业']
+            # 确定最终列顺序 - 财务指标在中间，"今年来"和"行业"放在最后
+            cols = base_cols + finance_cols + list(extra_cols) + end_cols
             
             # 确保所有列都在DataFrame中
             valid_cols = [col for col in cols if col in result_df.columns]

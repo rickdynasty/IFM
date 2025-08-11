@@ -18,8 +18,9 @@ class StockDataFactory:
             'sub_types': None,
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
+                '持股比': '持股比',
                 '持有市值': '持有市值.亿',
-                '持股比': '持股比'
+                'PE': 'PE'
             },
             'display_name': '北上持股排名'
         },
@@ -37,7 +38,11 @@ class StockDataFactory:
             },
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '关注度': '关注度'
+                '关注度': '关注度',
+                'PE.扣非': '扣非PE',
+                '北上持股': '北上持股',
+                'PB': 'PB',
+                '当前ROE': 'ROE'
             }
         },
         '最便宜股票': {
@@ -50,7 +55,12 @@ class StockDataFactory:
             },
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '便宜指数': '便宜指数'
+                '便宜指数': '便宜指数',
+                '北上持股': '北上持股',
+                'PE.扣非': 'PE.扣非',
+                'PE.TTM': 'PE.TTM',
+                'PB': 'PB',
+                '当前ROE': 'ROE'
             }
         },
         'ROE排名': {
@@ -58,7 +68,9 @@ class StockDataFactory:
             'sub_types': None,
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                'ROE': 'ROE'
+                '当前ROE': 'ROE',
+                'PE.扣非': '扣非PE',
+                'PB': 'PB'
             },
             'display_name': 'ROE最高'
         },
@@ -70,7 +82,9 @@ class StockDataFactory:
             },
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '平均ROE': 'ROE',
+                '当前ROE': '当前ROE',
+                '平均ROE': '平均ROE',
+                'PE.扣非': '扣非PE',
                 '北上持股': '北上持股'
             }
         },
@@ -83,7 +97,11 @@ class StockDataFactory:
             },
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                'PEG': 'PEG'
+                'PEG': 'PEG',
+                'PE.扣非': 'PE.扣非',
+                '预测增速': '预测增速',
+                '北上持股': '北上持股',
+                '当前ROE': 'ROE'
             }
         },
         '股息率排名': {
@@ -95,7 +113,11 @@ class StockDataFactory:
             },
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '平均股息': '平均股息'  # 修正列名，去掉空格
+                '股息率': '最新股息',
+                '平均股息': '平均股息',  # 修正列名，去掉空格
+                'PE.扣非': '扣非PE',
+                'PB': 'PB',
+                '当前ROE': 'ROE'
             }
         },
         '控盘度排名': {
@@ -103,7 +125,9 @@ class StockDataFactory:
             'sub_types': None,
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '控盘度': '控盘度'
+                '控盘度': '控盘度',
+                '北上持股': '北上持股',
+                'PE.扣非': '扣非PE'
             }
         },
         '股东数最少排名': {
@@ -111,7 +135,10 @@ class StockDataFactory:
             'sub_types': None,
             'date_dependent': True,  # 依赖日期文件夹
             'extra_columns': {
-                '股东数': '股东数.人'
+                '股东数': '股东数.人',
+                '北上持股': '北上持股',
+                'PE.扣非': '扣非PE',
+                'PB': 'PB'
             }
         },
         '基金重仓股': {
