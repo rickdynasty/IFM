@@ -111,39 +111,13 @@ class StockData(BaseData):
             # 根据文件类型加载数据
             if self.file_path.endswith('.txt'):
                 df = self._read_csv_file(self.file_path, sep='\t')
-            elif 'Fund_holdings_ranking' in self.file_path:
-                # 基金重仓股文件需要特殊处理
-                try:
-                    # 先尝试读取前几行查看结构
-                    with open(self.file_path, 'r', encoding='utf-8') as f:
-                        first_lines = [f.readline() for _ in range(3)]
-                    print(f"基金重仓股文件前几行: {first_lines}")
-                    
-                    # 基金重仓股文件有特殊格式，使用标准读取
-                    df = pd.read_csv(self.file_path)
-                    print(f"基金重仓股文件列名: {df.columns.tolist()}")
-                    
-                    # 处理列名，去除可能的空格
-                    df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
-                    
-                    # 检查是否有占总股本列
-                    if '占总股本' in df.columns:
-                        print("找到'占总股本'列")
-                    else:
-                        print(f"未找到'占总股本'列，可用列: {df.columns.tolist()}")
-                        
-                        # 尝试查找包含"占总股本"的列
-                        for col in df.columns:
-                            if isinstance(col, str) and '占总股本' in col:
-                                print(f"找到包含'占总股本'的列: {col}")
-                                # 重命名列
-                                df.rename(columns={col: '占总股本'}, inplace=True)
-                                break
-                except Exception as e:
-                    print(f"读取基金重仓股文件失败: {e}")
-                    df = pd.DataFrame()
+            # 所有文件类型都使用标准读取方式
             else:
                 df = self._read_csv_file(self.file_path)
+                
+                # 处理列名，去除可能的空格
+                if not df.empty:
+                    df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
             
             if df.empty:
                 self._is_loaded = False
