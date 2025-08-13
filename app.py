@@ -10,9 +10,13 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 # 导入自定义模块
 from modules.fund_filter import fund_filter, get_fund_managers, get_fund_companies
-from modules.stock_filter_new import stock_filter, get_stock_type_options, get_sub_type_options, get_industry_options
-from modules.utils import load_css, format_number, user_auth, save_user_preferences
+from modules.stock_filter import stock_filter, get_stock_type_options, get_sub_type_options, get_industry_options
+from modules.utils import (
+    load_css, format_number, user_auth, save_user_preferences,
+    get_available_dates, get_current_date
+)
 from modules.config import APP_TITLE, APP_ICON, APP_VERSION, DATA_PATH
+from modules.ui_utils import display_table, display_statistics
 
 # 设置页面配置 - 移动菜单到底部
 st.set_page_config(
@@ -378,43 +382,8 @@ elif st.session_state.current_page == "📈 基金筛选":
         
         # 不需要添加序号列，只需在HTML表格中修改表头
         
-        # 应用样式，包括各年收益率
-        styled_df = result.style.map(color_returns, subset=['年化收益率', '第1年收益率', '第2年收益率', '第3年收益率', 
-                                                      '近1年', '近2年', '近3年', '今年来', '成立来'])
-        
-        # 为基金代码和基金简称添加可点击链接
-        styled_df = styled_df.format({'基金代码': lambda x: make_clickable_fund(x, True),
-                                     '基金简称': lambda x: make_clickable_fund(x, False)})
-        
-        # 构建列配置 - 添加各年收益率列
-        column_config = {
-            "基金代码": st.column_config.TextColumn("基金代码", width=80),
-            "基金简称": st.column_config.TextColumn("基金简称", width=150),
-            "基金类型": st.column_config.TextColumn("基金类型", width=80),  # 改为TextColumn，不再隐藏类型
-            "年化收益率": st.column_config.TextColumn("年化收益率", width=100),
-            "上市年限": st.column_config.TextColumn("上市年限", width=80),
-            "第1年收益率": st.column_config.TextColumn("第1年收益", width=90),
-            "第2年收益率": st.column_config.TextColumn("第2年收益", width=90),
-            "第3年收益率": st.column_config.TextColumn("第3年收益", width=90),
-            "近1年": st.column_config.TextColumn("近1年", width=80),
-            "近2年": st.column_config.TextColumn("近2年", width=80),
-            "近3年": st.column_config.TextColumn("近3年", width=80),
-            "今年来": st.column_config.TextColumn("今年来", width=80),
-            "成立来": st.column_config.TextColumn("成立来", width=80)
-        }
-        
-        # 添加额外列配置
-        if '基金经理' in result.columns:
-            column_config["基金经理"] = st.column_config.TextColumn("基金经理", width=120)
-        if '基金公司' in result.columns:
-            column_config["基金公司"] = st.column_config.TextColumn("基金公司", width=150)
-        
-        # 增加表格高度，充分利用节省出来的页面空间
-        # Streamlit的dataframe不支持unsafe_allow_html参数，需要使用st.write来显示HTML链接
-        st.write(
-            styled_df.to_html(escape=False),
-            unsafe_allow_html=True
-        )
+        # 使用新的UI工具显示表格和统计信息
+        display_table(result, data_type='fund')
         
         # 已在上方显示统计信息，这里不再需要
     else:
@@ -425,7 +394,7 @@ elif st.session_state.current_page == "📊 股票筛选":
     st.sidebar.markdown("### 🔍 筛选条件")
     
     # 日期选择
-    from modules.stock_filter_new import get_available_dates, get_current_date
+    # 已经在顶部导入 get_available_dates 和 get_current_date
     
     available_dates = get_available_dates()
     current_date = get_current_date()
@@ -699,14 +668,8 @@ elif st.session_state.current_page == "📊 股票筛选":
                     styles[col] = df_or_series[col].apply(lambda x: color_values(x, col))
                 return styles
         
-        # 应用样式和格式
-        styled_df = result.style.format(format_dict).apply(apply_styles)
-        
-        # 显示表格数据 - 使用st.write来显示HTML链接
-        st.write(
-            styled_df.to_html(escape=False),
-            unsafe_allow_html=True
-        )
+        # 使用新的UI工具显示表格和统计信息
+        display_table(result, data_type='stock')
         
         # 已在上方显示统计信息，这里不再需要
         

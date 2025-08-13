@@ -1,14 +1,16 @@
 """
 工具函数模块
+提供通用的工具函数，包括UI样式、数据格式化、文件操作和日期处理
 """
 
 import os
 import json
 import streamlit as st
 import pandas as pd
+import re
 from datetime import datetime
 import hashlib
-from modules.config import USER_DATA_PATH
+from modules.config import USER_DATA_PATH, DATA_PATH
 
 def load_css():
     """加载自定义CSS样式"""
@@ -226,3 +228,140 @@ def get_user_preferences(user_id, category=None):
     except Exception as e:
         st.error(f"读取设置失败: {e}")
         return {}
+
+
+# 日期和文件处理函数
+def get_available_dates(data_type='stock'):
+    """
+    获取可用的数据日期列表
+    
+    Args:
+        data_type: 数据类型，'stock'或'fund'
+        
+    Returns:
+        list: 可用的日期列表，按降序排序
+    """
+    data_dir = os.path.join(DATA_PATH, data_type)
+    available_dates = []
+    
+    if os.path.exists(data_dir):
+        # 获取所有子目录
+        for item in os.listdir(data_dir):
+            item_path = os.path.join(data_dir, item)
+            # 检查是否为目录且名称符合日期格式
+            if os.path.isdir(item_path) and re.match(r'\d{4}\.\d{2}', item):
+                available_dates.append(item)
+    
+    # 按日期降序排序，最新的在前面
+    available_dates.sort(reverse=True)
+    return available_dates
+
+
+def get_current_date():
+    """
+    获取当前日期，格式为 YYYY.MM
+    
+    Returns:
+        str: 当前日期字符串
+    """
+    now = datetime.now()
+    return f"{now.year}.{now.month:02d}"
+
+
+def clean_stock_code(code_str):
+    """
+    清理并标准化股票代码
+    
+    Args:
+        code_str: 原始股票代码字符串
+        
+    Returns:
+        str: 标准化的6位股票代码
+    """
+    if not code_str or pd.isna(code_str):
+        return ""
+    
+    code_str = str(code_str).replace("'", "").strip()
+    
+    # 处理"SH600519.贵州茅台"或"600519.贵州茅台"格式
+    if '.' in code_str:
+        code_part = code_str.split('.')[0]
+        clean_code = re.sub(r'^(SH|SZ)', '', code_part)
+    # 处理可能包含逗号的格式
+    elif ',' in code_str:
+        parts = code_str.split(',')
+        if len(parts) > 1:
+            # 假设第二部分是代码
+            code_part = parts[1].strip()
+            clean_code = re.sub(r'^(SH|SZ)', '', code_part)
+        else:
+            # 只有一部分，可能是纯代码
+            clean_code = code_str
+    else:
+        # 假设是纯代码
+        clean_code = code_str
+    
+    # 确保代码只包含数字
+    clean_code = re.sub(r'\D', '', clean_code)
+    
+    # 标准化为6位数字
+    if clean_code:
+        return clean_code.zfill(6)
+    
+    return ""
+
+
+def safe_read_csv(file_path, sep=',', encoding='utf-8'):
+    """
+    安全读取CSV文件
+    
+    Args:
+        file_path: 文件路径
+        sep: 分隔符，默认为逗号
+        encoding: 文件编码，默认为utf-8
+        
+    Returns:
+        pd.DataFrame: 读取的数据，如果读取失败则返回空DataFrame
+    """
+    try:
+        if os.path.exists(file_path):
+            if file_path.endswith('.txt'):
+                return pd.read_csv(file_path, sep=sep, encoding=encoding)
+            return pd.read_csv(file_path, encoding=encoding)
+        return pd.DataFrame()
+    except Exception as e:
+        print(f"读取文件 {file_path} 失败: {e}")
+        return pd.DataFrame()
+
+
+def safe_get_numeric(value, allow_percent=True):
+    """
+    安全获取数值，处理各种格式
+    
+    Args:
+        value: 要转换的值
+        allow_percent: 是否允许百分比格式
+        
+    Returns:
+        float: 转换后的数值，如果转换失败则返回None
+    """
+    if pd.isna(value) or value == '' or value == '-':
+        return None
+        
+    try:
+        if isinstance(value, (int, float)):
+            return float(value)
+            
+        value_str = str(value).replace("'", "").strip()
+        
+        # 处理百分比格式
+        if allow_percent and '%' in value_str:
+            return float(value_str.replace('%', ''))
+        
+        # 处理带有单位的格式，如"亿"
+        if '亿' in value_str:
+            return float(value_str.replace('亿', ''))
+            
+        return float(value_str)
+    except Exception:
+        return None

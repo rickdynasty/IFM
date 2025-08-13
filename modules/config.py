@@ -60,3 +60,54 @@ TIME_PERIOD_MAPPING = {
     "three_years": "近3年",
     "five_years": "近5年"
 }
+
+# 表格显示配置
+TABLE_CONFIG = {
+    "height": 500,  # 表格高度（像素）
+    "row_height": 35,  # 行高（像素）
+    "header_bg_color": "#f0f2f6",  # 表头背景色
+    "header_text_color": "#333333",  # 表头文字颜色
+    "border_color": "#e0e0e0",  # 边框颜色
+    "link_color": "#1e88e5",  # 链接颜色
+    "positive_color": "#ef4444",  # 正值颜色（红色）
+    "negative_color": "#10b981",  # 负值颜色（绿色）
+    "hover_color": "#f5f5f5"  # 鼠标悬停颜色
+}
+
+# 列宽配置
+COLUMN_WIDTH = {
+    "股票代码": 80,
+    "基金代码": 80,
+    "股票名称": 120,
+    "基金简称": 150,
+    "行业": 100,
+    "基金类型": 80,
+    "年化收益率": 100,
+    "上市年限": 80,
+    "default": 90  # 默认列宽
+}
+
+# 外部链接配置
+EXTERNAL_LINKS = {
+    "stock": {
+        "同花顺": "https://stockpage.10jqka.com.cn/{code}",
+        "雪球": "https://xueqiu.com/S/{exchange}{code}",
+        "东方财富": "https://quote.eastmoney.com/{exchange}{code}.html"
+    },
+    "fund": {
+        "同花顺": "https://fund.10jqka.com.cn/{code}",
+        "东方财富": "https://fund.eastmoney.com/{code}.html",
+        "天天基金": "https://fund.eastmoney.com/{code}.html"
+    }
+}
+
+# 数据格式化配置
+FORMAT_CONFIG = {
+    "percent_columns": [
+        "当前ROE", "ROE", "股息", "最新股息", "平均股息", 
+        "今年来", "持股比", "平均ROE", "年化收益率"
+    ],
+    "money_columns": ["持有市值"],
+    "float_columns": ["扣非PE", "PB", "PEG", "便宜指数"],
+    "int_columns": ["股东数", "控盘度", "推荐数"]
+}
