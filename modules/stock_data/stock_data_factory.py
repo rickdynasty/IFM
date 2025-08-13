@@ -141,6 +141,31 @@ class StockDataFactory:
                 'PB': 'PB'
             }
         },
+        '自由现金流排名': {
+            'file': 'Free_cash_flow_ranking_20250331.csv',
+            'sub_types': None,
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '现金/市值': '现金/市值',
+                '资产负债率': '资产负债率',
+                'PE.扣非': 'PE.扣非',
+                '市值.亿': '市值.亿'
+            },
+            'display_name': '自由现金流排名'
+        },
+        '自由现金流折现排名': {
+            'file': 'Discounted_free_cash_flow_ranking.csv',
+            'sub_types': None,
+            'date_dependent': True,  # 依赖日期文件夹
+            'extra_columns': {
+                '低估率': '低估率',
+                '资产负债率': '资产负债率',
+                'PE': 'PE',
+                'PB': 'PB',
+                '当前ROE': 'ROE'
+            },
+            'display_name': '自由现金流折现排名'
+        },
         '基金重仓股': {
             'file_pattern': 'Fund_holdings_ranking_{}.csv',
             'sub_types': {
