@@ -258,10 +258,10 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
     st.markdown(f"""
     <style>
     .fixed-table {{
-        width: auto !important;  /* 改为auto，不强制100%宽度 */
+        width: auto !important;
         min-width: 100%;  /* 最小宽度100%，确保至少填满容器 */
         border-collapse: collapse;
-        table-layout: fixed !important;  /* 强制使用固定布局 */
+        table-layout: fixed;
         font-size: 13px;  /* 减小字体大小 */
     }}
     .fixed-table-container {{
@@ -307,29 +307,29 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
     .negative-value {{
         color: {TABLE_CONFIG['negative_color']};
     }}
-    /* 设置特定列的宽度 - 使用!important确保宽度设置被严格遵守 */
-    .col-序号 {{ width: 40px !important; max-width: 40px !important; min-width: 40px !important; }}
+    /* 设置特定列的宽度 */
+    .col-序号 {{ width: 40px; }}
     
     /* 基金表格列宽 */
-    .col-基金代码 {{ width: 70px !important; max-width: 70px !important; min-width: 70px !important; }}
-    .col-基金简称 {{ width: 110px !important; max-width: 110px !important; min-width: 110px !important; }}
-    .col-基金类型 {{ width: 70px !important; max-width: 70px !important; min-width: 70px !important; }}
-    .col-年化收益率 {{ width: 80px !important; max-width: 80px !important; min-width: 80px !important; }}
-    .col-第1年收益率, .col-第2年收益率, .col-第3年收益率 {{ width: 80px !important; max-width: 80px !important; min-width: 80px !important; }}
-    .col-今年来, .col-近1年, .col-近3年 {{ width: 60px !important; max-width: 60px !important; min-width: 60px !important; }}
-    .col-上市年限 {{ width: 60px !important; max-width: 60px !important; min-width: 60px !important; }}
-    .col-基金经理, .col-基金公司 {{ width: 90px !important; max-width: 90px !important; min-width: 90px !important; }}
+    .col-基金代码 {{ width: 70px; }}
+    .col-基金简称 {{ width: 110px; }}
+    .col-基金类型 {{ width: 70px; }}
+    .col-年化收益率 {{ width: 80px; }}
+    .col-第1年收益率, .col-第2年收益率, .col-第3年收益率 {{ width: 80px; }}
+    .col-今年来, .col-近1年, .col-近3年 {{ width: 60px; }}
+    .col-上市年限 {{ width: 60px; }}
+    .col-基金经理, .col-基金公司 {{ width: 90px; }}
     
     /* 股票表格列宽 */
-    .col-股票代码 {{ width: 80px !important; max-width: 80px !important; min-width: 80px !important; }}
-    .col-股票名称 {{ width: 80px !important; max-width: 80px !important; min-width: 80px !important; }}
-    .col-股息率 {{ width: 50px !important; max-width: 50px !important; min-width: 50px !important; }}
-    .col-北上持股 {{ width: 90px !important; max-width: 90px !important; min-width: 90px !important; }}
-    .col-当前ROE {{ width: 60px !important; max-width: 60px !important; min-width: 60px !important; }}
-    .col-平均ROE {{ width: 60px !important; max-width: 60px !important; min-width: 60px !important; }}
-    .col-PE.扣非 {{ width: 60px !important; max-width: 60px !important; min-width: 60px !important; }}
-    .col-今年来 {{ width: 60px !important; max-width: 60px !important; min-width: 60px !important; }}
-    .col-行业 {{ width: 70px !important; max-width: 70px !important; min-width: 70px !important; }}
+    .col-股票代码 {{ width: 80px; }}
+    .col-股票名称 {{ width: 80px; }}
+    .col-股息率 {{ width: 50px; }}
+    .col-北上持股 {{ width: 90px; }}
+    .col-当前ROE {{ width: 60px; }}
+    .col-平均ROE {{ width: 60px; }}
+    .col-PE.扣非 {{ width: 60px; }}
+    .col-今年来 {{ width: 60px; }}
+    .col-行业 {{ width: 70px; }}
     </style>
     """, unsafe_allow_html=True)
     
