@@ -307,50 +307,52 @@ elif st.session_state.current_page == "📈 基金筛选":
     
     # 重新排列页面组件
     if len(result) > 0:
-        # 先显示筛选结果统计
-        st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("符合条件的基金数量", len(result))
-        
-        with col2:
-            try:
-                avg_return = result['年化收益率'].str.replace('%', '').astype(float).mean()
-                st.metric("平均年化收益率", f"{avg_return:.2f}%")
-            except:
-                st.metric("平均年化收益率", "---")
-        
-        with col3:
-            try:
-                max_return = result['年化收益率'].str.replace('%', '').astype(float).max()
-                st.metric("最高年化收益率", f"{max_return:.2f}%")
-            except:
-                st.metric("最高年化收益率", "---")
-        
-        with col4:
-            try:
-                min_return = result['年化收益率'].str.replace('%', '').astype(float).min()
-                st.metric("最低年化收益率", f"{min_return:.2f}%")
-            except:
-                st.metric("最低年化收益率", "---")
-        
-        # 然后显示筛选结果标题和下载按钮
-        result_col1, result_col2 = st.columns([3, 1])
-        
-        with result_col1:
-            st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>", unsafe_allow_html=True)
-        
-        # 导出功能
-        with result_col2:
-            csv = result.to_csv(index=False, encoding='utf-8-sig')
-            st.download_button(
-                label="📥 下载筛选结果 (CSV)",
-                data=csv,
-                file_name=f"基金筛选结果_{fund_type}_{selected_date}_{min_annual_return}%_{min_years_listed}年_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
+        # # 先显示筛选结果统计
+        # st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>",
+        #             unsafe_allow_html=True)
+        # col1, col2, col3, col4 = st.columns(4)
+        #
+        # with col1:
+        #     st.metric("符合条件的基金数量", len(result))
+        #
+        # with col2:
+        #     try:
+        #         avg_return = result['年化收益率'].str.replace('%', '').astype(float).mean()
+        #         st.metric("平均年化收益率", f"{avg_return:.2f}%")
+        #     except:
+        #         st.metric("平均年化收益率", "---")
+        #
+        # with col3:
+        #     try:
+        #         max_return = result['年化收益率'].str.replace('%', '').astype(float).max()
+        #         st.metric("最高年化收益率", f"{max_return:.2f}%")
+        #     except:
+        #         st.metric("最高年化收益率", "---")
+        #
+        # with col4:
+        #     try:
+        #         min_return = result['年化收益率'].str.replace('%', '').astype(float).min()
+        #         st.metric("最低年化收益率", f"{min_return:.2f}%")
+        #     except:
+        #         st.metric("最低年化收益率", "---")
+        #
+        # # 然后显示筛选结果标题和下载按钮
+        # result_col1, result_col2 = st.columns([3, 1])
+        #
+        # with result_col1:
+        #     st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>",
+        #                 unsafe_allow_html=True)
+        #
+        # # 导出功能
+        # with result_col2:
+        #     csv = result.to_csv(index=False, encoding='utf-8-sig')
+        #     st.download_button(
+        #         label="📥 下载筛选结果 (CSV)",
+        #         data=csv,
+        #         file_name=f"基金筛选结果_{fund_type}_{selected_date}_{min_annual_return}%_{min_years_listed}年_{datetime.now().strftime('%Y%m%d')}.csv",
+        #         mime="text/csv",
+        #         use_container_width=True
+        #     )
         # 定义颜色函数
         def color_returns(val):
             try:
@@ -383,8 +385,9 @@ elif st.session_state.current_page == "📈 基金筛选":
         # 不需要添加序号列，只需在HTML表格中修改表头
         
         # 使用新的UI工具显示表格和统计信息
-        display_table(result, data_type='fund')
-        
+        # 传递show_title=True以显示标题
+        display_table(result, data_type='fund', show_title=True)
+
         # 已在上方显示统计信息，这里不再需要
     else:
         st.warning("⚠️ 没有找到符合条件的基金，请调整筛选条件。")
@@ -488,48 +491,50 @@ elif st.session_state.current_page == "📊 股票筛选":
     st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 股票筛选系统</h2>", unsafe_allow_html=True)
     
     if len(result) > 0:
-        # 先显示筛选结果统计
-        st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("符合条件的股票数量", len(result))
-        
-        with col2:
-            st.metric("筛选类型数量", len(selected_types))
-            
-        with col3:
-            if industry_filter:
-                st.metric("筛选行业数量", len(industry_filter))
-            else:
-                st.metric("筛选行业数量", 0)
-        
-        with col4:
-            st.metric("数据日期", selected_date)
-        
-        # 然后显示筛选结果标题和下载按钮
-        result_col1, result_col2 = st.columns([3, 1])
-        
-        with result_col1:
-            st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>", unsafe_allow_html=True)
-        
-        # 导出功能
-        with result_col2:
-            csv = result.to_csv(index=False, encoding='utf-8-sig')
-            
-            # 生成文件名
-            file_name = f"股票筛选结果_{len(selected_types)}种类型"
-            if industry_filter:
-                file_name += f"_{len(industry_filter)}个行业"
-            file_name += f"_{selected_date}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
-            
-            st.download_button(
-                label="📥 下载筛选结果 (CSV)",
-                data=csv,
-                file_name=file_name,
-                mime="text/csv",
-                use_container_width=True
-            )
+        # # 先显示筛选结果统计
+        # st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>",
+        #             unsafe_allow_html=True)
+        # col1, col2, col3, col4 = st.columns(4)
+        #
+        # with col1:
+        #     st.metric("符合条件的股票数量", len(result))
+        #
+        # with col2:
+        #     st.metric("筛选类型数量", len(selected_types))
+        #
+        # with col3:
+        #     if industry_filter:
+        #         st.metric("筛选行业数量", len(industry_filter))
+        #     else:
+        #         st.metric("筛选行业数量", 0)
+        #
+        # with col4:
+        #     st.metric("数据日期", selected_date)
+        #
+        # # 然后显示筛选结果标题和下载按钮
+        # result_col1, result_col2 = st.columns([3, 1])
+        #
+        # with result_col1:
+        #     st.markdown("<h3 style='margin-top:0; padding-top:0; margin-bottom:0;'>📋 筛选结果</h3>",
+        #                 unsafe_allow_html=True)
+        #
+        # # 导出功能
+        # with result_col2:
+        #     csv = result.to_csv(index=False, encoding='utf-8-sig')
+        #
+        #     # 生成文件名
+        #     file_name = f"股票筛选结果_{len(selected_types)}种类型"
+        #     if industry_filter:
+        #         file_name += f"_{len(industry_filter)}个行业"
+        #     file_name += f"_{selected_date}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+        #
+        #     st.download_button(
+        #         label="📥 下载筛选结果 (CSV)",
+        #         data=csv,
+        #         file_name=file_name,
+        #         mime="text/csv",
+        #         use_container_width=True
+        #     )
         # 添加股票代码和股票名称的链接生成函数
         def make_clickable_stock(val, is_code=False):
             """将股票代码或股票名称转换为可点击的链接"""
@@ -669,7 +674,8 @@ elif st.session_state.current_page == "📊 股票筛选":
                 return styles
         
         # 使用新的UI工具显示表格和统计信息
-        display_table(result, data_type='stock')
+        # 传递show_title=True以显示标题
+        display_table(result, data_type='stock', show_title=True)
         
         # 已在上方显示统计信息，这里不再需要
         

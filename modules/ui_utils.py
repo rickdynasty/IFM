@@ -218,13 +218,14 @@ def apply_color_style(df: pd.DataFrame) -> pd.DataFrame:
     return df.style.apply(apply_styles)
 
 
-def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
+def display_table(df: pd.DataFrame, data_type: str = 'stock', show_title: bool = False) -> None:
     """
-    显示带有固定表头的表格
+    显示带有固定表头的表格，支持通过下拉菜单排序
     
     Args:
         df: 要显示的DataFrame
         data_type: 数据类型，'stock'或'fund'
+        show_title: 是否显示标题和下载按钮，默认为False
     """
     if df.empty:
         st.warning("没有找到符合条件的数据，请调整筛选条件。")
@@ -254,12 +255,168 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
         # 股票表格保持原样
         display_df = formatted_df.copy()
     
+    # 为每个表格类型创建固定的会话状态键
+    # 使用数据类型区分不同表格，避免使用时间戳
+    sort_state_key = f"sort_col_state_{data_type}"
+    sort_dir_state_key = f"sort_dir_state_{data_type}"
+    
+    # 初始化会话状态以跟踪排序
+    if sort_state_key not in st.session_state:
+        st.session_state[sort_state_key] = None
+        st.session_state[sort_dir_state_key] = True
+        
+    # 创建标题行，包含排序控件（移除标签，优化布局）
+    if show_title:
+        # 如果需要显示标题，则创建标题行
+        st.markdown("### 📋 筛选结果")
+    
+    # 创建排序控件行
+    col1, col2, col3, col4 = st.columns([1, 2, 2, 1])
+    
+    # 获取当前排序状态
+    current_sort_col = st.session_state[sort_state_key]
+    current_sort_asc = st.session_state[sort_dir_state_key]
+    
+    # 排序列选择
+    sortable_columns = [col for col in display_df.columns if col != '序号']
+    
+    with col1:
+        # 创建固定的widget key，使用数据类型区分
+        widget_key = f"select_{data_type}"
+        
+        # 确定初始索引
+        if current_sort_col is None:
+            initial_index = 0
+        else:
+            try:
+                initial_index = sortable_columns.index(current_sort_col) + 1
+            except ValueError:
+                initial_index = 0
+        
+        # 排序列选择（移除标签）
+        sort_column = st.selectbox(
+            label="排序列",  # 提供标签但隐藏
+            options=["不排序"] + sortable_columns,
+            index=initial_index,
+            key=widget_key,
+            label_visibility="collapsed"  # 完全隐藏标签
+        )
+    
+    # 排序方向选择
+    with col2:
+        # 创建固定的widget key，使用数据类型区分
+        direction_key = f"radio_{data_type}"
+        
+        # 排序方向选择（移除标签）
+        sort_direction = st.radio(
+            label="排序方向",  # 提供标签但隐藏
+            options=["升序", "降序"],
+            index=0 if current_sort_asc else 1,
+            horizontal=True,
+            key=direction_key,
+            disabled=(sort_column == "不排序"),
+            label_visibility="collapsed"  # 完全隐藏标签
+        )
+    
+    # 更新排序状态
+    if sort_column == "不排序":
+        st.session_state[sort_state_key] = None
+    else:
+        st.session_state[sort_state_key] = sort_column
+    
+    # 更新排序方向
+    st.session_state[sort_dir_state_key] = (sort_direction == "升序")
+    
+    # 定义列宽配置
+    column_widths = {
+        '序号': 40,
+        '股票代码': 80,
+        '基金代码': 80,
+        '股票名称': 80,
+        '基金简称': 110,
+        '股息率': 50,
+        '北上持股': 90,
+        '当前ROE': 60,
+        '平均ROE': 60,
+        'PE.扣非': 60,
+        '今年来': 60,
+        '行业': 70
+    }
+    
+    # 为未明确定义宽度的列设置默认宽度
+    for col in display_df.columns:
+        if col not in column_widths:
+            column_widths[col] = 70  # 默认宽度
+    
+    # 应用排序 - 简化逻辑，增强健壮性
+    if sort_column != "不排序" and sort_column in display_df.columns:
+        # 使用当前选择的排序列和方向
+        col = sort_column
+        asc = (sort_direction == "升序")
+        
+        # 更新会话状态
+        st.session_state[sort_state_key] = col
+        st.session_state[sort_dir_state_key] = asc
+        
+        # 尝试将列转换为数值进行排序
+        try:
+            # 检查是否为百分比值 - 更健壮的方式
+            has_percent = False
+            if display_df[col].dtype == object:
+                try:
+                    has_percent = display_df[col].astype(str).str.contains('%').any()
+                except:
+                    has_percent = False
+                    
+            if has_percent:
+                # 处理百分比值
+                temp_col = col + '_sort'
+                display_df[temp_col] = display_df[col].str.replace('%', '').astype(float)
+                display_df = display_df.sort_values(by=temp_col, ascending=asc)
+                display_df = display_df.drop(columns=[temp_col])
+            else:
+                # 尝试直接排序
+                display_df = display_df.sort_values(by=col, ascending=asc)
+        except Exception as e:
+            # 如果转换失败，按字符串排序
+            try:
+                display_df = display_df.sort_values(by=col, ascending=asc)
+            except:
+                # 如果排序完全失败，记录错误但不中断程序
+                pass
+    
+    # 只有在需要显示标题时才显示下载按钮
+    if show_title:
+        # 添加下载按钮到第四列
+        with col4:
+            # 将DataFrame转换为CSV
+            csv = display_df.to_csv(index=False)
+            
+            # 生成更有意义的文件名
+            from datetime import datetime
+            current_time = datetime.now().strftime('%Y%m%d_%H%M')
+            
+            if data_type == 'stock':
+                file_name = f"股票筛选结果_{current_time}.csv"
+            else:
+                file_name = f"基金筛选结果_{current_time}.csv"
+            
+            # 添加下载按钮 - 使用固定的key
+            download_key = f"dl_{data_type}"
+            st.download_button(
+                label="⬇ 下载筛选结果",
+                data=csv.encode('utf-8-sig'),  # 使用UTF-8 with BOM，确保Excel正确显示中文
+                file_name=file_name,
+                mime="text/csv",
+                key=download_key,
+                use_container_width=True  # 使按钮填满容器宽度
+            )
+    
     # 添加CSS样式
     st.markdown(f"""
     <style>
     .fixed-table {{
-        width: auto !important;
-        min-width: 100%;  /* 最小宽度100%，确保至少填满容器 */
+        width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
         font-size: 13px;  /* 减小字体大小 */
@@ -307,33 +464,10 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
     .negative-value {{
         color: {TABLE_CONFIG['negative_color']};
     }}
-    /* 设置特定列的宽度 */
-    .col-序号 {{ width: 40px; }}
-    
-    /* 基金表格列宽 */
-    .col-基金代码 {{ width: 70px; }}
-    .col-基金简称 {{ width: 110px; }}
-    .col-基金类型 {{ width: 70px; }}
-    .col-年化收益率 {{ width: 80px; }}
-    .col-第1年收益率, .col-第2年收益率, .col-第3年收益率 {{ width: 80px; }}
-    .col-今年来, .col-近1年, .col-近3年 {{ width: 60px; }}
-    .col-上市年限 {{ width: 60px; }}
-    .col-基金经理, .col-基金公司 {{ width: 90px; }}
-    
-    /* 股票表格列宽 */
-    .col-股票代码 {{ width: 80px; }}
-    .col-股票名称 {{ width: 80px; }}
-    .col-股息率 {{ width: 50px; }}
-    .col-北上持股 {{ width: 90px; }}
-    .col-当前ROE {{ width: 60px; }}
-    .col-平均ROE {{ width: 60px; }}
-    .col-PE.扣非 {{ width: 60px; }}
-    .col-今年来 {{ width: 60px; }}
-    .col-行业 {{ width: 70px; }}
     </style>
     """, unsafe_allow_html=True)
     
-    # 手动构建HTML表格
+    # 手动构建HTML表格，包含原始表头
     html_parts = ['<div class="fixed-table-container"><table class="fixed-table">']
     
     # 添加表头
@@ -341,7 +475,12 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
     html_parts.append('<tr>')
     for col in display_df.columns:
         # 为每列添加特定的CSS类，强制应用列宽
-        html_parts.append(f'<th class="col-{col}" style="width: var(--col-width, auto) !important;">{col}</th>')
+        # 添加当前排序列的标记
+        if sort_column != "不排序" and sort_column == col:
+            sort_icon = " ↑" if (sort_direction == "升序") else " ↓"
+            html_parts.append(f'<th class="col-{col}" style="width: {column_widths.get(col, 70)}px;">{col}{sort_icon}</th>')
+        else:
+            html_parts.append(f'<th class="col-{col}" style="width: {column_widths.get(col, 70)}px;">{col}</th>')
     html_parts.append('</tr>')
     html_parts.append('</thead>')
     
@@ -387,13 +526,15 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
                         pass
             css_class += '"'
             
-            # 添加单元格，并强制应用列宽样式
-            html_parts.append(f'<td{css_class} style="width: var(--col-width, auto) !important;">{value}</td>')
+            # 添加单元格，应用列宽样式
+            html_parts.append(f'<td{css_class} style="width: {column_widths.get(col_name, 70)}px;">{value}</td>')
         
         html_parts.append('</tr>')
     
     html_parts.append('</tbody>')
     html_parts.append('</table></div>')
+    
+    # 不再需要JavaScript排序代码
     
     # 显示表格
     st.markdown(''.join(html_parts), unsafe_allow_html=True)
@@ -401,74 +542,15 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock') -> None:
 
 def display_statistics(df: pd.DataFrame, data_type: str = 'stock') -> None:
     """
-    显示统计信息
+    显示统计信息 - 当前已禁用，减少高度占用
     
     Args:
         df: 要统计的DataFrame
         data_type: 数据类型，'stock'或'fund'
     """
-    if df.empty:
-        return
+    # 移除筛选结果统计部分，减少高度占用
+    pass
     
-    st.markdown("<h3 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 筛选结果统计</h3>", unsafe_allow_html=True)
+
     
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("符合条件的数量", len(df))
-    
-    if data_type == 'fund':
-        with col2:
-            try:
-                avg_return = df['年化收益率'].str.replace('%', '').astype(float).mean()
-                st.metric("平均年化收益率", f"{avg_return:.2f}%")
-            except:
-                st.metric("平均年化收益率", "---")
-        
-        with col3:
-            try:
-                max_return = df['年化收益率'].str.replace('%', '').astype(float).max()
-                st.metric("最高年化收益率", f"{max_return:.2f}%")
-            except:
-                st.metric("最高年化收益率", "---")
-        
-        with col4:
-            try:
-                min_return = df['年化收益率'].str.replace('%', '').astype(float).min()
-                st.metric("最低年化收益率", f"{min_return:.2f}%")
-            except:
-                st.metric("最低年化收益率", "---")
-    
-    elif data_type == 'stock':
-        with col2:
-            if '行业' in df.columns:
-                industry_count = df['行业'].nunique()
-                st.metric("行业数量", industry_count)
-            else:
-                st.metric("行业数量", "---")
-        
-        with col3:
-            if '今年来' in df.columns:
-                try:
-                    avg_ytd = df['今年来'].str.replace('%', '').astype(float).mean()
-                    st.metric("平均今年来涨幅", f"{avg_ytd:.2f}%")
-                except:
-                    st.metric("平均今年来涨幅", "---")
-            else:
-                st.metric("平均今年来涨幅", "---")
-        
-        with col4:
-            if '当前ROE' in df.columns:
-                try:
-                    avg_roe = df['当前ROE'].str.replace('%', '').astype(float).mean()
-                    st.metric("平均ROE", f"{avg_roe:.2f}%")
-                except:
-                    st.metric("平均ROE", "---")
-            elif 'ROE' in df.columns:
-                try:
-                    avg_roe = df['ROE'].str.replace('%', '').astype(float).mean()
-                    st.metric("平均ROE", f"{avg_roe:.2f}%")
-                except:
-                    st.metric("平均ROE", "---")
-            else:
-                st.metric("平均ROE", "---")
+
