@@ -39,16 +39,28 @@ hide_menu_style = """
     .stDeployButton {display: none;}
     header {visibility: hidden;}
     
-    /* 减少顶部和底部留白 */
+    /* 减少顶部和底部留白，最大化内容区域 */
     .block-container {
-        padding-top: 10px !important;
-        padding-bottom: 10px !important;
+        padding-top: 0rem;
+        padding-bottom: 0rem;
+        max-width: 100% !important;
     }
     
     /* 减少标题和元素间距 */
     h1, h2, h3 {
-        margin-top: 0.5rem !important;
-        margin-bottom: 0.5rem !important;
+        margin-top: 0.0rem;
+        margin-bottom: 0rem;
+    }
+    
+    /* 优化页面布局，减少空白 */
+    .stApp {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
+    .main .block-container {
+        height: calc(100vh - 2rem);
+        overflow-y: auto;
     }
     
     /* 减少筛选结果统计与表格的间距 */
@@ -303,7 +315,7 @@ elif st.session_state.current_page == "📈 基金筛选":
         )
     
     # 主内容区域 - 使用更紧凑的标题样式
-    st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📈 基金筛选系统</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📈 基金筛选系统 - 筛选结果</h2>", unsafe_allow_html=True)
     
     # 重新排列页面组件
     if len(result) > 0:
@@ -488,7 +500,7 @@ elif st.session_state.current_page == "📊 股票筛选":
         result = stock_filter(selected_types, sub_types, industry_filter, selected_date, roe_filter, dividend_filter)
     
     # 主内容区域 - 使用更紧凑的标题样式
-    st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 股票筛选系统</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-top:0rem; padding-top:0rem; margin-bottom:0rem;'>📊 股票筛选系统 - 筛选结果</h2>", unsafe_allow_html=True)
     
     if len(result) > 0:
         # # 先显示筛选结果统计
@@ -675,7 +687,7 @@ elif st.session_state.current_page == "📊 股票筛选":
         
         # 使用新的UI工具显示表格和统计信息
         # 传递show_title=True以显示标题
-        display_table(result, data_type='stock', show_title=True)
+        display_table(result, data_type='stock', show_title=False)
         
         # 已在上方显示统计信息，这里不再需要
         

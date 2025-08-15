@@ -267,10 +267,12 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock', show_title: bool =
         
     # 创建标题行，包含排序控件（移除标签，优化布局）
     if show_title:
-        # 如果需要显示标题，则创建标题行
-        st.markdown("### 📋 筛选结果")
+        # 如果需要显示标题，则创建标题行 - 减小标题边距
+        st.markdown("""
+        <h3 style="margin-top:0rem; padding-top:0rem; margin-bottom:0rem;">📋 筛选结果</h3>
+        """, unsafe_allow_html=True)
     
-    # 创建排序控件行
+    # 创建排序控件行 - 使用更紧凑的布局
     col1, col2, col3, col4 = st.columns([1, 2, 2, 1])
     
     # 获取当前排序状态
@@ -415,6 +417,17 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock', show_title: bool =
     # 添加CSS样式
     st.markdown(f"""
     <style>
+    /* 移除页面底部留白 */
+    .main .block-container {{
+        padding-bottom: 100rem;
+        max-width: 85%;
+    }}
+    
+    /* 确保表格容器填充可用空间 */
+    .stApp {{
+        height: 100vh;
+    }}
+    
     .fixed-table {{
         width: 100%;
         border-collapse: collapse;
@@ -422,7 +435,8 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock', show_title: bool =
         font-size: 13px;  /* 减小字体大小 */
     }}
     .fixed-table-container {{
-        max-height: {TABLE_CONFIG['height']}px;
+        height: calc(100vh - 200px); /* 动态计算高度，留出页面其他元素的空间 */
+        min-height: {TABLE_CONFIG['height']}px; /* 最小高度保证 */
         overflow-x: auto;
         overflow-y: auto;
         width: 100%;  /* 确保容器宽度占满 */
@@ -444,12 +458,24 @@ def display_table(df: pd.DataFrame, data_type: str = 'stock', show_title: bool =
         font-size: 13px;  /* 表头字体大小 */
     }}
     .fixed-table td {{
-        padding: 4px;  /* 减小单元格内边距 */
+        padding: 3px 4px;  /* 进一步减小单元格内边距 */
         border-bottom: 1px solid {TABLE_CONFIG['border_color']};
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         text-align: center;  /* 居中对齐 */
+        height: 28px;  /* 固定行高，使表格更紧凑 */
+        max-height: 32px;
+    }}
+    
+    /* 优化排序控件的布局 */
+    .stSelectbox, .stRadio {{
+        margin-bottom: 0rem;
+    }}
+    
+    /* 减少Streamlit组件的默认间距 */
+    .element-container {{
+        margin-bottom: 0rem;
     }}
     .fixed-table a {{
         color: {TABLE_CONFIG['link_color']};
