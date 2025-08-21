@@ -145,7 +145,7 @@ with st.sidebar.expander("👤 用户中心", expanded=False):
             st.rerun()
 
 # 主页面选择
-page_options = ["🏠 首页", "📈 基金筛选", "📊 股票筛选"]
+page_options = ["🏠 首页", "📈 基金筛选", "📊 股票筛选", "🔍 股票查询"]
 if st.session_state.user_logged_in:
     page_options.extend(["📉 经济周期监测", "💰 投资组合分析", "⚙️ 个人设置"])
 
@@ -800,6 +800,143 @@ elif st.session_state.current_page == "⚙️ 个人设置" and st.session_state
         st.text_input("确认新密码", type="password")
         st.button("确认修改")
 
+# 股票查询页面
+elif st.session_state.current_page == "🔍 股票查询":
+    st.markdown("## 🔍 股票查询")
+    st.markdown("输入股票代码或名称，查看该股票在各分类中的情况")
+    
+    # 输入框
+    stock_input = st.text_input("请输入股票代码或名称", "")
+    
+    # 添加日期选择
+    available_dates = get_available_dates()
+    selected_date = st.selectbox(
+        "选择数据日期",
+        available_dates,
+        index=0,
+        help="选择要查询的数据日期"
+    )
+    
+    if st.button("查询") and stock_input:
+        with st.spinner("正在查询股票信息..."):
+            # 导入所需模块
+            from modules.stock_data import StockDataManager, StockDataFactory
+            
+            # 创建数据管理器
+            data_manager = StockDataManager(selected_date=selected_date)
+            
+            # 获取所有股票类型
+            all_stock_types = StockDataFactory.get_all_stock_types()
+            
+            # 记录股票所属的分类
+            stock_categories = {}
+            stock_info = None
+            
+            # 遍历所有股票类型
+            for stock_type in all_stock_types:
+                # 获取该类型的子类型
+                sub_types = StockDataFactory.get_sub_types(stock_type)
+                
+                if sub_types:
+                    # 如果有子类型，遍历每个子类型
+                    for sub_type in sub_types:
+                        # 加载数据
+                        data_manager.load_stock_data(stock_type, sub_type)
+                        
+                        # 在已加载的数据中查找股票
+                        for code, info in data_manager.all_stock_info.items():
+                            # 检查是否匹配代码或名称
+                            # 股票代码匹配逻辑优化：精确匹配或包含匹配
+                            code_match = False
+                            if stock_input == code:  # 精确匹配
+                                code_match = True
+                            elif stock_input in code:  # 包含匹配
+                                code_match = True
+                            
+                            # 股票名称匹配
+                            name_match = False
+                            if info.get('名称') and stock_input in info.get('名称'):
+                                name_match = True
+                                
+                            # 如果代码或名称匹配
+                            if code_match or name_match:
+                                # 记录该股票所属的分类
+                                category_key = f"{stock_type} - {sub_type}"
+                                stock_categories[category_key] = True
+                                
+                                # 保存股票信息
+                                if stock_info is None:
+                                    stock_info = info.copy()
+                                    stock_info['股票代码'] = code
+                else:
+                    # 如果没有子类型，直接加载数据
+                    data_manager.load_stock_data(stock_type)
+                    
+                    # 在已加载的数据中查找股票
+                    for code, info in data_manager.all_stock_info.items():
+                        # 检查是否匹配代码或名称
+                        # 股票代码匹配逻辑优化：精确匹配或包含匹配
+                        code_match = False
+                        if stock_input == code:  # 精确匹配
+                            code_match = True
+                        elif stock_input in code:  # 包含匹配
+                            code_match = True
+                        
+                        # 股票名称匹配
+                        name_match = False
+                        if info.get('名称') and stock_input in info.get('名称'):
+                            name_match = True
+                            
+                        # 如果代码或名称匹配
+                        if code_match or name_match:
+                            # 记录该股票所属的分类
+                            stock_categories[stock_type] = True
+                            
+                            # 保存股票信息
+                            if stock_info is None:
+                                stock_info = info.copy()
+                                stock_info['股票代码'] = code
+            
+            # 显示结果
+            if stock_info:
+                # 显示股票基本信息
+                st.markdown(f"### 股票信息: {stock_info.get('名称', '')} ({stock_info.get('股票代码', '')})")
+                
+                # 显示所属分类
+                st.markdown("#### 所属分类:")
+                for category in stock_categories.keys():
+                    st.markdown(f"- {category}")
+                
+                # 创建股票详细信息表格
+                info_data = []
+                for key, value in stock_info.items():
+                    if key not in ['名称', '股票代码']:
+                        info_data.append({"指标": key, "数值": value})
+                
+                if info_data:
+                    st.markdown("#### 详细指标:")
+                    info_df = pd.DataFrame(info_data)
+                    
+                    # 对指标进行排序，使重要指标显示在前面
+                    priority_indicators = ['行业', 'ROE', '当前ROE', '平均ROE', 'PE.扣非', 'PB', 
+                                          '股息', '最新股息', '平均股息', '北上持股', '今年来']
+                    
+                    # 创建优先级映射
+                    priority_map = {ind: i for i, ind in enumerate(priority_indicators)}
+                    
+                    # 对DataFrame进行排序
+                    def get_priority(row):
+                        indicator = row['指标']
+                        return priority_map.get(indicator, 999)  # 未在列表中的指标排在后面
+                    
+                    info_df['priority'] = info_df.apply(get_priority, axis=1)
+                    info_df = info_df.sort_values('priority').drop('priority', axis=1)
+                    
+                    # 显示排序后的表格
+                    st.dataframe(info_df, use_container_width=True)
+            else:
+                st.warning(f"未找到包含 '{stock_input}' 的股票，请检查输入是否正确")
+    
 # 未登录用户尝试访问需要登录的页面
 elif st.session_state.current_page in ["📉 经济周期监测", "💰 投资组合分析", "⚙️ 个人设置"]:
     st.warning("⚠️ 请先登录以访问此功能")
