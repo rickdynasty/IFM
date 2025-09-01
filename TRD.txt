@@ -44,7 +44,7 @@ Investment and Financial Management 投资理财系统
         2.2.6 ROE连续超过百分比的股票排名
             连续3年超15%的股票排名：ROE_exceeded_15p_three_consecutive_years.csv
             连续5年超15%的股票排名：ROE_exceeded_15p_five_consecutive_years.csv
-        2.2.7 股票扣非PEG排名，分近1年、近3年、近5年
+        2.2.7 股票扣非PEG排名，分近1年、近3年、近5年（PEG = PE/预测接下来一年的扣非净利润增速，越小代表越低估；预测增速：依据近5年的滚动扣非净利润进行的预测；排除了ST和近5年出现过滚动扣非净利润亏损的股票）
             近1年扣非PEG排名：PEG_ranking_in_the_past_year.csv
             近3年扣非PEG排名：PEG_ranking_in_the_past_three_years.csv
             近5年扣非PEG排名：PEG_ranking_in_the_past_five_years.csv
@@ -70,6 +70,8 @@ Investment and Financial Management 投资理财系统
             近6月：Research_report_recommends_hot_stocks_in_the_past_six_months.csv
             近1年：Research_report_recommends_hot_stocks_in_the_past_year.csv
         2.2.13 自由现金流排名，自由现金流 = 现金 + 现金等价物 - 有息负债
-            20250331：Free_cash_flow_ranking_20250331.csv
+            20250331：Free_cash_flow_ranking.csv
+            20250630：Free_cash_flow_ranking.csv
         2.2.14 自由现金流折现排名，取公司最近3年的【自由现金流】进行线性回归，预测未来增长率，之后按照5年10%的折现率进行折现
             20250331：Discounted_free_cash_flow_ranking.csv
+        2.2..15
