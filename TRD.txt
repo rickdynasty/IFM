@@ -70,8 +70,8 @@ Investment and Financial Management 投资理财系统
             近6月：Research_report_recommends_hot_stocks_in_the_past_six_months.csv
             近1年：Research_report_recommends_hot_stocks_in_the_past_year.csv
         2.2.13 自由现金流排名，自由现金流 = 现金 + 现金等价物 - 有息负债
-            20250331：Free_cash_flow_ranking.csv
-            20250630：Free_cash_flow_ranking.csv
+            20250331(8月)：Free_cash_flow_ranking.csv
+            20250630(9月)：Free_cash_flow_ranking.csv
         2.2.14 自由现金流折现排名，取公司最近3年的【自由现金流】进行线性回归，预测未来增长率，之后按照5年10%的折现率进行折现
             20250331：Discounted_free_cash_flow_ranking.csv
         2.2..15

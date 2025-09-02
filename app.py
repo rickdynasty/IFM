@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 # 导入自定义模块
 from modules.fund_filter import fund_filter, get_fund_managers, get_fund_companies
-from modules.stock_filter import stock_filter, get_stock_type_options, get_sub_type_options, get_industry_options
+from modules.stock_filter import stock_filter, get_stock_type_options, get_sub_type_options, get_industry_options, search_stock
 from modules.utils import (
     load_css, format_number, user_auth, save_user_preferences,
     get_available_dates, get_current_date
@@ -819,83 +819,10 @@ elif st.session_state.current_page == "🔍 股票查询":
     
     if st.button("查询") and stock_input:
         with st.spinner("正在查询股票信息..."):
-            # 导入所需模块
-            from modules.stock_data import StockDataManager, StockDataFactory
-            
-            # 创建数据管理器
-            data_manager = StockDataManager(selected_date=selected_date)
-            
-            # 获取所有股票类型
-            all_stock_types = StockDataFactory.get_all_stock_types()
-            
-            # 记录股票所属的分类
-            stock_categories = {}
-            stock_info = None
-            
-            # 遍历所有股票类型
-            for stock_type in all_stock_types:
-                # 获取该类型的子类型
-                sub_types = StockDataFactory.get_sub_types(stock_type)
-                
-                if sub_types:
-                    # 如果有子类型，遍历每个子类型
-                    for sub_type in sub_types:
-                        # 加载数据
-                        data_manager.load_stock_data(stock_type, sub_type)
-                        
-                        # 在已加载的数据中查找股票
-                        for code, info in data_manager.all_stock_info.items():
-                            # 检查是否匹配代码或名称
-                            # 股票代码匹配逻辑优化：精确匹配或包含匹配
-                            code_match = False
-                            if stock_input == code:  # 精确匹配
-                                code_match = True
-                            elif stock_input in code:  # 包含匹配
-                                code_match = True
-                            
-                            # 股票名称匹配
-                            name_match = False
-                            if info.get('名称') and stock_input in info.get('名称'):
-                                name_match = True
-                                
-                            # 如果代码或名称匹配
-                            if code_match or name_match:
-                                # 记录该股票所属的分类
-                                category_key = f"{stock_type} - {sub_type}"
-                                stock_categories[category_key] = True
-                                
-                                # 保存股票信息
-                                if stock_info is None:
-                                    stock_info = info.copy()
-                                    stock_info['股票代码'] = code
-                else:
-                    # 如果没有子类型，直接加载数据
-                    data_manager.load_stock_data(stock_type)
-                    
-                    # 在已加载的数据中查找股票
-                    for code, info in data_manager.all_stock_info.items():
-                        # 检查是否匹配代码或名称
-                        # 股票代码匹配逻辑优化：精确匹配或包含匹配
-                        code_match = False
-                        if stock_input == code:  # 精确匹配
-                            code_match = True
-                        elif stock_input in code:  # 包含匹配
-                            code_match = True
-                        
-                        # 股票名称匹配
-                        name_match = False
-                        if info.get('名称') and stock_input in info.get('名称'):
-                            name_match = True
-                            
-                        # 如果代码或名称匹配
-                        if code_match or name_match:
-                            # 记录该股票所属的分类
-                            stock_categories[stock_type] = True
-                            
-                            # 保存股票信息
-                            if stock_info is None:
-                                stock_info = info.copy()
-                                stock_info['股票代码'] = code
+            # 使用模块函数查询股票信息
+            result = search_stock(stock_input, selected_date)
+            stock_info = result['stock_info']
+            stock_categories = result['categories']
             
             # 显示结果
             if stock_info:
@@ -904,7 +831,7 @@ elif st.session_state.current_page == "🔍 股票查询":
                 
                 # 显示所属分类
                 st.markdown("#### 所属分类:")
-                for category in stock_categories.keys():
+                for category in stock_categories:
                     st.markdown(f"- {category}")
                 
                 # 创建股票详细信息表格

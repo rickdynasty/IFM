@@ -21,6 +21,7 @@ local.properties
 classes
 
 obj
+cache
 
 .DS_Store
 __pycache__
