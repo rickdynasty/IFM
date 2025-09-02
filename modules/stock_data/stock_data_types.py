@@ -17,9 +17,7 @@ class NorthboundStockData(BaseStockData):
         self.file_name = 'The_highest_proportion_of_northbound_funds_held.csv'
     
     def _determine_file_path(self) -> str:
-        path = os.path.join(self.data_dir, self.file_name)
-        
-        return path
+        return os.path.join(self.data_dir, self.file_name)
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
         # 北上资金特有的额外列
@@ -63,16 +61,16 @@ class HotStockData(BaseStockData):
     def _determine_file_path(self) -> str:
         if self.time_period in self.period_mapping:
             period_value = self.period_mapping[self.time_period]
-            path = os.path.join(self.data_dir, self.file_pattern.format(period_value))
-            
-            return path
+            return os.path.join(self.data_dir, self.file_pattern.format(period_value))
         return ""
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 热门股票特有的额外列
         extra_columns = {
-            '关注度': '关注度',
-            'PE.扣非': '扣非PE',
-            '北上持股': '北上持股'
+            '交易额': '20日平均成交额.亿',
+            '流通市值': '流通市值.亿',
+            '今年来': '今年来.%',
+            '热门指数': '热门指数'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -96,27 +94,29 @@ class CheapestStockData(BaseStockData):
         super().__init__(data_dir, date_dependent=True)
         self.stock_filter = stock_filter
         self.filter_mapping = {
-            '全部': 'stocks',
-            '不包括周期性股票': 'non-cyclical_stocks',
-            '不包括银行股': 'non-bank_stocks',
-            '不包括周期性股票和银行股': 'non-cyclical_non-bank_stocks'
+            '全部': '',
+            '不包括周期性股票': 'non-cyclical',
+            '不包括银行股': 'non-bank',
+            '不包括周期性股票和银行股': 'non-cyclical_non-bank'
         }
-        self.file_pattern = 'The_cheapest_{}.csv'
+        self.file_pattern = 'The_cheapest{}_stocks.csv'
     
     def _determine_file_path(self) -> str:
         if self.stock_filter in self.filter_mapping:
             filter_value = self.filter_mapping[self.stock_filter]
-            path = os.path.join(self.data_dir, self.file_pattern.format(filter_value))
-            
-            return path
+            if filter_value:
+                filter_value = "_" + filter_value
+            return os.path.join(self.data_dir, self.file_pattern.format(filter_value))
         return ""
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 最便宜股票特有的额外列
         extra_columns = {
             '便宜指数': '便宜指数',
-            '北上持股': '北上持股',
-            'PE.扣非': 'PE.扣非',
-            'PE.TTM': 'PE.TTM'
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '股息': '股息.%',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -141,14 +141,16 @@ class ROERankingStockData(BaseStockData):
         self.file_name = 'Highest_ROE_ranking.csv'
     
     def _determine_file_path(self) -> str:
-        path = os.path.join(self.data_dir, self.file_name)
-        
-        return path
+        return os.path.join(self.data_dir, self.file_name)
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # ROE排名股票特有的额外列
         extra_columns = {
-            'ROE': 'ROE',
-            'PE.扣非': '扣非PE'
+            'ROE': 'ROE.%',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '股息': '股息.%',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -167,7 +169,6 @@ class ROERankingStockData(BaseStockData):
 
 class ROEConsecutiveStockData(BaseStockData):
     """ROE连续超15%股票数据"""
-    
     def __init__(self, data_dir: str, years: str):
         super().__init__(data_dir, date_dependent=True)
         self.years = years
@@ -184,7 +185,6 @@ class ROEConsecutiveStockData(BaseStockData):
             
             # 检查文件是否存在，如果不存在尝试其他可能的路径
             if not os.path.exists(path):
-                
                 # 尝试不同格式的文件名
                 alt_pattern = "ROE_exceeded_15p_{}consecutive_years.csv"  # 移除下划线
                 alt_path = os.path.join(self.data_dir, alt_pattern.format(years_value + "_"))
@@ -198,6 +198,7 @@ class ROEConsecutiveStockData(BaseStockData):
                 
                 if os.path.exists(direct_path):
                     return direct_path
+                return ""
             else:
                 return path
         
@@ -214,14 +215,18 @@ class ROEConsecutiveStockData(BaseStockData):
         if display_name not in self.extra_data:
             self.extra_data[display_name] = {}
         
-        # 尝试多种可能的ROE列名
-        roe_columns = ['ROE', 'roe', '平均ROE', '平均roe', 'ROE(%)', 'roe(%)', '平均ROE(%)', '平均roe(%)']
+        # 查找ROE相关列名
+        found_column = None
+        roe_patterns = [r'.*平均ROE.*', r'.*ROE均值.*', r'.*ROE.*%.*']
         
-        # 查找匹配的列
-        found_column = next((col for col in roe_columns if col in df.columns), None)
+        for pattern in roe_patterns:
+            matching_columns = [col for col in df.columns if pd.Series([col]).str.match(pattern).any()]
+            if matching_columns:
+                found_column = matching_columns[0]
+                break
         
         if found_column:
-            
+            # 提取ROE数据
             for _, row in df.iterrows():
                 try:
                     code = self.clean_code(row[code_column])
@@ -229,12 +234,6 @@ class ROEConsecutiveStockData(BaseStockData):
                         self.extra_data[display_name][code] = str(row[found_column]).strip()
                 except Exception:
                     pass
-        else:
-            
-            # 如果找不到ROE列，使用当前ROE数据
-            for code in self.stock_codes:
-                if code in self.stock_info and '当前ROE' in self.stock_info[code]:
-                    self.extra_data[display_name][code] = self.stock_info[code]['当前ROE']
     
     def _extract_northbound_data(self, df: pd.DataFrame, code_column: str) -> None:
         """提取北上持股数据的特殊处理"""
@@ -242,18 +241,20 @@ class ROEConsecutiveStockData(BaseStockData):
         if display_name not in self.extra_data:
             self.extra_data[display_name] = {}
         
-        if '北上持股' in df.columns:
+        # 查找北上持股相关列名
+        northbound_columns = [col for col in df.columns if '北上' in col or '持股' in col]
+        
+        if northbound_columns:
+            found_column = northbound_columns[0]
+            
+            # 提取北上持股数据
             for _, row in df.iterrows():
                 try:
                     code = self.clean_code(row[code_column])
-                    if code and pd.notna(row['北上持股']):
-                        self.extra_data[display_name][code] = str(row['北上持股']).strip()
+                    if code and pd.notna(row[found_column]):
+                        self.extra_data[display_name][code] = str(row[found_column]).strip()
                 except Exception:
                     pass
-        else:
-            # 如果找不到北上持股列，默认标记为"否"
-            for code in self.stock_codes:
-                self.extra_data[display_name][code] = '否'
 
 
 class PEGRankingStockData(BaseStockData):
@@ -272,17 +273,17 @@ class PEGRankingStockData(BaseStockData):
     def _determine_file_path(self) -> str:
         if self.time_period in self.period_mapping:
             period_value = self.period_mapping[self.time_period]
-            path = os.path.join(self.data_dir, self.file_pattern.format(period_value))
-            
-            return path
+            return os.path.join(self.data_dir, self.file_pattern.format(period_value))
         return ""
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # PEG排名股票特有的额外列
         extra_columns = {
             'PEG': 'PEG',
-            'PE.扣非': 'PE.扣非',
-            '预测增速': '预测增速',
-            '北上持股': '北上持股'
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '股息': '股息.%',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -299,7 +300,7 @@ class PEGRankingStockData(BaseStockData):
                         pass
 
 
-class DividendYieldStockData(BaseStockData):
+class DividendRankingStockData(BaseStockData):
     """股息率排名股票数据"""
     
     def __init__(self, data_dir: str, time_period: str):
@@ -315,15 +316,17 @@ class DividendYieldStockData(BaseStockData):
     def _determine_file_path(self) -> str:
         if self.time_period in self.period_mapping:
             period_value = self.period_mapping[self.time_period]
-            path = os.path.join(self.data_dir, self.file_pattern.format(period_value))
-            
-            return path
+            return os.path.join(self.data_dir, self.file_pattern.format(period_value))
         return ""
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 股息率排名股票特有的额外列
         extra_columns = {
-            '股息率': '最新股息',
-            '平均股息': '平均股息'
+            '平均股息': '平均股息.%',
+            '最新股息': '最新股息.%',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -348,15 +351,16 @@ class ControlRankingStockData(BaseStockData):
         self.file_name = 'Strongest_control_top200.txt'
     
     def _determine_file_path(self) -> str:
-        path = os.path.join(self.data_dir, self.file_name)
-        
-        return path
+        return os.path.join(self.data_dir, self.file_name)
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 控盘度排名股票特有的额外列
         extra_columns = {
             '控盘度': '控盘度',
-            '北上持股': '北上持股',
-            'PE.扣非': '扣非PE'
+            '流通市值': '流通值',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -373,7 +377,7 @@ class ControlRankingStockData(BaseStockData):
                         pass
 
 
-class ShareholderCountStockData(BaseStockData):
+class ShareholderRankingStockData(BaseStockData):
     """股东数最少排名股票数据"""
     
     def __init__(self, data_dir: str):
@@ -381,15 +385,16 @@ class ShareholderCountStockData(BaseStockData):
         self.file_name = 'The_lowest_shareholders_in_history_top200.txt'
     
     def _determine_file_path(self) -> str:
-        path = os.path.join(self.data_dir, self.file_name)
-        
-        return path
+        return os.path.join(self.data_dir, self.file_name)
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 股东数最少排名股票特有的额外列
         extra_columns = {
-            '股东数': '股东数.人',
-            '北上持股': '北上持股',
-            'PE.扣非': '扣非PE'
+            '股东数': '股东数',
+            '流通市值': '流通值',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -406,8 +411,8 @@ class ShareholderCountStockData(BaseStockData):
                         pass
 
 
-class FundHoldingStockData(BaseStockData):
-    """基金持仓股票数据"""
+class FundHoldingRankingStockData(BaseStockData):
+    """基金重仓股排名股票数据"""
     
     def __init__(self, data_dir: str, quarter: str):
         super().__init__(data_dir, date_dependent=False)
@@ -416,13 +421,16 @@ class FundHoldingStockData(BaseStockData):
     
     def _determine_file_path(self) -> str:
         # 基金持仓数据文件在根目录，不依赖日期
-        path = os.path.join('data', 'stock', self.file_pattern.format(self.quarter))
-        
-        return path
+        return os.path.join('data', 'stock', self.file_pattern.format(self.quarter))
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 基金重仓股排名股票特有的额外列
         extra_columns = {
-            '占总股本': '占总股本'
+            '持仓家数': '持仓家数',
+            '持股比例': '持股比例.%',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -439,7 +447,7 @@ class FundHoldingStockData(BaseStockData):
                         pass
 
 
-class ResearchReportStockData(BaseStockData):
+class ResearchReportRankingStockData(BaseStockData):
     """券商研报推荐股票数据"""
     
     def __init__(self, data_dir: str, time_period: str):
@@ -457,14 +465,16 @@ class ResearchReportStockData(BaseStockData):
     def _determine_file_path(self) -> str:
         if self.time_period in self.period_mapping:
             period_value = self.period_mapping[self.time_period]
-            path = os.path.join(self.data_dir, self.file_pattern.format(period_value))
-            
-            return path
+            return os.path.join(self.data_dir, self.file_pattern.format(period_value))
         return ""
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 券商研报推荐股票特有的额外列
         extra_columns = {
-            '推荐数': '推荐数'
+            '推荐数': '推荐次数',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -481,24 +491,23 @@ class ResearchReportStockData(BaseStockData):
                         pass
 
 
-class FreeCashFlowStockData(BaseStockData):
+class FreeCashFlowRankingStockData(BaseStockData):
     """自由现金流排名股票数据"""
     
     def __init__(self, data_dir: str):
         super().__init__(data_dir, date_dependent=True)
-        self.file_name = 'Free_cash_flow_ranking.csv'
+        self.file_name = 'Free_cash_flow_ranking_20250331.csv'  # 注意：这里的日期是固定的
     
     def _determine_file_path(self) -> str:
-        path = os.path.join(self.data_dir, self.file_name)
-        
-        return path
+        return os.path.join(self.data_dir, self.file_name)
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 自由现金流排名股票特有的额外列
         extra_columns = {
-            '现金/市值': '现金/市值',
-            '资产负债率': '资产负债率',
-            'PE.扣非': 'PE.扣非',
-            '市值.亿': '市值.亿'
+            '自由现金流收益率': 'FCF收益率.%',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -515,7 +524,7 @@ class FreeCashFlowStockData(BaseStockData):
                         pass
 
 
-class DiscountedFreeCashFlowStockData(BaseStockData):
+class DiscountedCashFlowRankingStockData(BaseStockData):
     """自由现金流折现排名股票数据"""
     
     def __init__(self, data_dir: str):
@@ -523,16 +532,15 @@ class DiscountedFreeCashFlowStockData(BaseStockData):
         self.file_name = 'Discounted_free_cash_flow_ranking.csv'
     
     def _determine_file_path(self) -> str:
-        path = os.path.join(self.data_dir, self.file_name)
-        
-        return path
+        return os.path.join(self.data_dir, self.file_name)
     
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
+        # 自由现金流折现排名股票特有的额外列
         extra_columns = {
-            '低估率': '低估率',
-            '资产负债率': '资产负债率',
-            'PE': 'PE',
-            'PB': 'PB'
+            '安全边际': '安全边际.%',
+            'PE': '扣非PE',
+            'PB': 'PB',
+            '今年来': '今年来.%'
         }
         
         for display_name, source_column in extra_columns.items():

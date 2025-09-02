@@ -12,13 +12,13 @@ from .stock_data_types import (
     ROERankingStockData,
     ROEConsecutiveStockData,
     PEGRankingStockData,
-    DividendYieldStockData,
+    DividendRankingStockData,
     ControlRankingStockData,
-    ShareholderCountStockData,
-    FundHoldingStockData,
-    ResearchReportStockData,
-    FreeCashFlowStockData,
-    DiscountedFreeCashFlowStockData
+    ShareholderRankingStockData,
+    FundHoldingRankingStockData,
+    ResearchReportRankingStockData,
+    FreeCashFlowRankingStockData,
+    DiscountedCashFlowRankingStockData
 )
 from .stock_data_factory import StockDataFactory
 from .stock_data_manager import StockDataManager
@@ -32,13 +32,13 @@ __all__ = [
     'ROERankingStockData',
     'ROEConsecutiveStockData',
     'PEGRankingStockData',
-    'DividendYieldStockData',
+    'DividendRankingStockData',
     'ControlRankingStockData',
-    'ShareholderCountStockData',
-    'FundHoldingStockData',
-    'ResearchReportStockData',
-    'FreeCashFlowStockData',
-    'DiscountedFreeCashFlowStockData',
+    'ShareholderRankingStockData',
+    'FundHoldingRankingStockData',
+    'ResearchReportRankingStockData',
+    'FreeCashFlowRankingStockData',
+    'DiscountedCashFlowRankingStockData',
     'StockDataFactory',
     'StockDataManager'
 ]

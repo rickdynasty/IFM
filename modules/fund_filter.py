@@ -94,13 +94,13 @@ def fund_filter(min_annual_return=5, min_consecutive_return=5, min_years_listed=
     for period in time_periods:
         df_all[f'{period}_数值'] = df_all[period].map(pct2float)
     
-    # 计算每一年的年收益率
+    # 计算每一年的年收益率 - 使用简单相减的方法
     def calculate_annual_returns(row):
         """计算每一年的单独年收益率
         
         第1年：直接使用近1年数据
-        第2年：近2年总收益 - 近1年总收益
-        第3年：近3年总收益 - 近2年总收益
+        第2年：第2年的表现 = 近2年总收益 - 近1年收益
+        第3年：第3年的表现 = 近3年总收益 - 近2年总收益
         """
         year1 = row.get('近1年_数值')
         year2 = row.get('近2年_数值')
@@ -112,16 +112,18 @@ def fund_filter(min_annual_return=5, min_consecutive_return=5, min_years_listed=
         # 计算第二年收益率
         year2_return = None
         if year2 is not None and year1 is not None:
-            # 计算第二年的收益率
-            # (1+r2)^2 = (1+r1)(1+x) => x = (1+r2)^2/(1+r1) - 1
-            year2_return = ((1 + year2/100)**2 / (1 + year1/100) - 1) * 100
+            # 使用简单相减计算第二年收益率
+            # 例如：近2年总收益率是17.57%，近1年收益率是24.12%
+            # 则第二年的收益率是 17.57% - 24.12% = -6.55%
+            year2_return = year2 - year1
         
         # 计算第三年收益率
         year3_return = None
         if year3 is not None and year2 is not None:
-            # 计算第三年的收益率
-            # (1+r3)^3 = (1+r2)^2(1+x) => x = (1+r3)^3/(1+r2)^2 - 1
-            year3_return = ((1 + year3/100)**3 / (1 + year2/100)**2 - 1) * 100
+            # 使用简单相减计算第三年收益率
+            # 例如：近3年总收益率是15.39%，近2年收益率是17.57%
+            # 则第三年的收益率是 15.39% - 17.57% = -2.18%
+            year3_return = year3 - year2
         
         return {
             'year1': year1_return,

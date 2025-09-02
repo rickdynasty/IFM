@@ -13,13 +13,13 @@ from .stock_data_types import (
     ROERankingStockData,
     ROEConsecutiveStockData,
     PEGRankingStockData,
-    DividendYieldStockData,
+    DividendRankingStockData,
     ControlRankingStockData,
-    ShareholderCountStockData,
-    FundHoldingStockData,
-    ResearchReportStockData,
-    FreeCashFlowStockData,
-    DiscountedFreeCashFlowStockData
+    ShareholderRankingStockData,
+    FundHoldingRankingStockData,
+    ResearchReportRankingStockData,
+    FreeCashFlowRankingStockData,
+    DiscountedCashFlowRankingStockData
 )
 
 
@@ -174,29 +174,29 @@ class StockDataFactory:
         elif stock_type == '股息率排名':
             if not sub_type:
                 sub_type = cls.STOCK_DATA_TYPES[stock_type]['sub_types'][0]
-            return DividendYieldStockData(full_data_dir, sub_type)
+            return DividendRankingStockData(full_data_dir, sub_type)
             
         elif stock_type == '控盘度排名':
             return ControlRankingStockData(full_data_dir)
             
         elif stock_type == '股东数最少排名':
-            return ShareholderCountStockData(full_data_dir)
+            return ShareholderRankingStockData(full_data_dir)
             
         elif stock_type == '基金重仓股':
             if not sub_type:
                 sub_type = cls.STOCK_DATA_TYPES[stock_type]['sub_types'][0]
-            return FundHoldingStockData(data_dir, sub_type)  # 注意这里用原始data_dir
+            return FundHoldingRankingStockData(data_dir, sub_type)  # 注意这里用原始data_dir
             
         elif stock_type == '券商研报推荐':
             if not sub_type:
                 sub_type = cls.STOCK_DATA_TYPES[stock_type]['sub_types'][0]
-            return ResearchReportStockData(full_data_dir, sub_type)
+            return ResearchReportRankingStockData(full_data_dir, sub_type)
             
         elif stock_type == '自由现金流排名':
-            return FreeCashFlowStockData(full_data_dir)
+            return FreeCashFlowRankingStockData(full_data_dir)
             
         elif stock_type == '自由现金流折现排名':
-            return DiscountedFreeCashFlowStockData(full_data_dir)
+            return DiscountedCashFlowRankingStockData(full_data_dir)
             
         return None
     
