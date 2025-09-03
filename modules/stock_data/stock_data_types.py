@@ -69,7 +69,7 @@ class HotStockData(BaseStockData):
         extra_columns = {
             '交易额': '20日平均成交额.亿',
             '流通市值': '流通市值.亿',
-            '今年来': '今年来.%',
+            '今年来': '今年来',
             '热门指数': '热门指数'
         }
         
@@ -115,8 +115,8 @@ class CheapestStockData(BaseStockData):
             '便宜指数': '便宜指数',
             'PE': '扣非PE',
             'PB': 'PB',
-            '股息': '股息.%',
-            '今年来': '今年来.%'
+            '股息': '股息',
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -146,11 +146,11 @@ class ROERankingStockData(BaseStockData):
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
         # ROE排名股票特有的额外列
         extra_columns = {
-            'ROE': 'ROE.%',
+            'ROE': 'ROE',
             'PE': '扣非PE',
             'PB': 'PB',
-            '股息': '股息.%',
-            '今年来': '今年来.%'
+            '股息': '股息',
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -282,8 +282,8 @@ class PEGRankingStockData(BaseStockData):
             'PEG': 'PEG',
             'PE': '扣非PE',
             'PB': 'PB',
-            '股息': '股息.%',
-            '今年来': '今年来.%'
+            '股息': '股息',
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -322,11 +322,11 @@ class DividendRankingStockData(BaseStockData):
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
         # 股息率排名股票特有的额外列
         extra_columns = {
-            '平均股息': '平均股息.%',
-            '最新股息': '最新股息.%',
+            '平均股息': '平均股息',
+            '最新股息': '最新股息',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -360,7 +360,7 @@ class ControlRankingStockData(BaseStockData):
             '流通市值': '流通值',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -394,7 +394,7 @@ class ShareholderRankingStockData(BaseStockData):
             '流通市值': '流通值',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -427,10 +427,10 @@ class FundHoldingRankingStockData(BaseStockData):
         # 基金重仓股排名股票特有的额外列
         extra_columns = {
             '持仓家数': '持仓家数',
-            '持股比例': '持股比例.%',
+            '持股比例': '持股比例',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -474,7 +474,7 @@ class ResearchReportRankingStockData(BaseStockData):
             '推荐数': '推荐次数',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -504,10 +504,10 @@ class FreeCashFlowRankingStockData(BaseStockData):
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
         # 自由现金流排名股票特有的额外列
         extra_columns = {
-            '自由现金流收益率': 'FCF收益率.%',
+            '自由现金流收益率': 'FCF收益率',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
@@ -537,10 +537,10 @@ class DiscountedCashFlowRankingStockData(BaseStockData):
     def _extract_extra_data(self, df: pd.DataFrame, code_column: str) -> None:
         # 自由现金流折现排名股票特有的额外列
         extra_columns = {
-            '安全边际': '安全边际.%',
+            '安全边际': '安全边际',
             'PE': '扣非PE',
             'PB': 'PB',
-            '今年来': '今年来.%'
+            '今年来': '今年来'
         }
         
         for display_name, source_column in extra_columns.items():
