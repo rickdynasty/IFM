@@ -113,7 +113,8 @@ class CheapestStockData(BaseStockData):
         # 最便宜股票特有的额外列
         extra_columns = {
             '便宜指数': '便宜指数',
-            'PE': '扣非PE',
+            'PE': 'PE.扣非',
+            'PE.TTM': 'PE.TTM',
             'PB': 'PB',
             '股息': '股息',
             '今年来': '今年来'
